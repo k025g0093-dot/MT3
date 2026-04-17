@@ -1,14 +1,14 @@
 ﻿#include <Novice.h>
 #include <corecrt_math.h>
 
-const char kWindowTitle[] = "LC1B_31_ヤマトユウヤ_タイトル";
+const char kWindowTitle[] = "LE2B_29_ヤマトユウヤ_タイトル";
 
 struct Vector3
 {
 	float x, y, z;
-}; 
+};
 
-Vector3 Add(const Vector3& v1,const Vector3& v2)
+Vector3 Add(const Vector3& v1, const Vector3& v2)
 {
 	Vector3 result{};
 	result.x = v1.x + v2.x;
@@ -17,7 +17,7 @@ Vector3 Add(const Vector3& v1,const Vector3& v2)
 	return result;
 }
 
-Vector3 Subtract(const Vector3& v1, const Vector3& v2) 
+Vector3 Subtract(const Vector3& v1, const Vector3& v2)
 {
 	Vector3 result{};
 	result.x = v1.x - v2.x;
@@ -26,7 +26,7 @@ Vector3 Subtract(const Vector3& v1, const Vector3& v2)
 	return result;
 }
 
-Vector3 Multiply( float scalar,const Vector3& v)
+Vector3 Multiply(float scalar, const Vector3& v)
 {
 	Vector3 result{};
 	result.x = v.x * scalar;
@@ -36,9 +36,9 @@ Vector3 Multiply( float scalar,const Vector3& v)
 	return result;
 }
 
-float Dot(const Vector3& v1, const Vector3& v2) 
+float Dot(const Vector3& v1, const Vector3& v2)
 {
-	float result=0;
+	float result = 0;
 
 	result = v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 	return result;
@@ -75,8 +75,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	Novice::Initialize(kWindowTitle, 1280, 720);
 
 	// キー入力結果を受け取る箱
-	char keys[256] = {0};
-	char preKeys[256] = {0};
+	char keys[256] = { 0 };
+	char preKeys[256] = { 0 };
 	static const int kColumnHeight = 30;
 
 	Vector3 v1{ 1.0f,3.0f,-5.0f };
@@ -98,7 +98,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 		Vector3 resultAdd = Add(v1, v2);
 		Vector3 resultSubtract = Subtract(v1, v2);
-		Vector3 resultMultiply = Multiply( k, v1);
+		Vector3 resultMultiply = Multiply(k, v1);
 		float  resultDot = Dot(v1, v2);
 		float resultLength = Length(v1);
 		Vector3 resultNormalize = Normalize(v2);
@@ -122,7 +122,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		Novice::ScreenPrintf(0, kColumnHeight * 3, "%.02f :Dot", resultDot);
 		Novice::ScreenPrintf(0, kColumnHeight * 4, "%.02f :Length", resultLength);
 		VectorScreenPrintf(0, kColumnHeight * 5, resultNormalize, ":Normalize");
-		
+
 		///
 		/// ↑描画処理ここまで
 		///
