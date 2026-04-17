@@ -68,7 +68,6 @@ void VectorScreenPrintf(int x, int y, const Vector3& vector, const char* label) 
 }
 
 
-
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
@@ -78,6 +77,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	// キー入力結果を受け取る箱
 	char keys[256] = {0};
 	char preKeys[256] = {0};
+	static const int kColumnHeight = 30;
 
 	Vector3 v1{ 1.0f,3.0f,-5.0f };
 	Vector3 v2{ 4.0f,-1.0f,2.0f };
@@ -117,11 +117,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		///
 
 		VectorScreenPrintf(0, 0, resultAdd, ":Add");
-		VectorScreenPrintf(0, kColumnWidth, resultSubtract, ":Subtract");
-		VectorScreenPrintf(0, kColumnWidth * 2, resultMultiply, ":Multiply");
-		Novice::ScreenPrintf(0, kColumnWidth * 3, "%.02f :Dot", resultDot);
-		Novice::ScreenPrintf(0, kColumnWidth * 4, "%.02f :Length", resultLength);
-		VectorScreenPrintf(0, kColumnWidth * 5, resultNormalize, ":Normalize");
+		VectorScreenPrintf(0, kColumnHeight, resultSubtract, ":Subtract");
+		VectorScreenPrintf(0, kColumnHeight * 2, resultMultiply, ":Multiply");
+		Novice::ScreenPrintf(0, kColumnHeight * 3, "%.02f :Dot", resultDot);
+		Novice::ScreenPrintf(0, kColumnHeight * 4, "%.02f :Length", resultLength);
+		VectorScreenPrintf(0, kColumnHeight * 5, resultNormalize, ":Normalize");
 		
 		///
 		/// ↑描画処理ここまで
