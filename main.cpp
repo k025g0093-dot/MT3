@@ -5,7 +5,7 @@ const char kWindowTitle[] = "LE2B_29_ヤマトユウヤ_タイトル";
 
 static const int kRowHeight = 20;
 static const int kColumnWidth = 60;
-void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix) {
+void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix,const char* label) {
 
 	for (int row = 0; row < 4; ++row) {
 		for (int column = 0; column < 4; ++column) {
@@ -69,14 +69,14 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		///
 
 
-		MatrixScreenPrintf(0, 0, resultAdd);
-		MatrixScreenPrintf(0, kRowHeight * 5, resultSubtract);
-		MatrixScreenPrintf(0, kRowHeight * 5 * 2, resultMultiply);
-		MatrixScreenPrintf(0, kRowHeight * 5 * 3, inverseM1);
-		MatrixScreenPrintf(0, kRowHeight * 5 * 4, inverseM2);
-		MatrixScreenPrintf(kColumnWidth*5, 0, transposeM1);
-		MatrixScreenPrintf(kColumnWidth * 5, kRowHeight * 5, transposeM2);
-		MatrixScreenPrintf(kColumnWidth * 5, kRowHeight * 5 * 2, identity);
+		MatrixScreenPrintf(0, 0, resultAdd,"Add");
+		MatrixScreenPrintf(0, kRowHeight * 5, resultSubtract, "Subtract");
+		MatrixScreenPrintf(0, kRowHeight * 5 * 2, resultMultiply,"Multiply");
+		MatrixScreenPrintf(0, kRowHeight * 5 * 3, inverseM1,"inverseM1");
+		MatrixScreenPrintf(0, kRowHeight * 5 * 4, inverseM2,"inverseM2");
+		MatrixScreenPrintf(kColumnWidth*5, 0, transposeM1,"transposeM1");
+		MatrixScreenPrintf(kColumnWidth * 5, kRowHeight * 5, transposeM2,"transposeM2");
+		MatrixScreenPrintf(kColumnWidth * 5, kRowHeight * 5 * 2, identity,"identity");
 
 
 
