@@ -77,7 +77,7 @@ Matrix4x4 Inverse(const Matrix4x4& m) {
 		+ m.m[0][1] * m.m[1][3] * m.m[2][2] * m.m[3][0];
 
 	if (det == 0.0f) {
-		return MakeIdentityMatrix();
+		return MakeIdentity4x4();
 	}
 
 	// A11 ~ A14
@@ -179,7 +179,7 @@ Matrix4x4 Transpose(const Matrix4x4& m) {
 }
 
 
-Matrix4x4 MakeIdentityMatrix() {
+Matrix4x4 MakeIdentity4x4() {
 	Matrix4x4 result{};
 	for (int row = 0; row < 4; ++row) {
 		for (int column = 0; column < 4; ++column) {
