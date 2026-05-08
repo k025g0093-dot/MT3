@@ -352,3 +352,22 @@ Matrix4x4 MakeRotateZMatrix(float radian) {
 
 	return result;
 }
+
+
+Matrix4x4 MakeAffineMatrix(
+	const Vector3& scale,
+	const Vector3& rotate,
+	const Vector3& translate) 
+{
+
+	Matrix4x4 scaleMatrix = MakeScaleMatrix(scale);
+	Matrix4x4 rotateXMatrix = MakeRotateXMatrix(rotate.x);
+	Matrix4x4 rotateYMatrix = MakeRotateYMatrix(rotate.y);
+	Matrix4x4 rotateZMatrix = MakeRotateZMatrix(rotate.z);
+	Matrix4x4 translateMatrix = MakeTranslateMatrix(translate);
+
+	Matrix4x4 result = Multiply(scaleMatrix, Multiply(Multiply(rotateXMatrix, rotateYMatrix), rotateZMatrix));
+	result = Multiply(result, translateMatrix);
+
+	return result;
+}
