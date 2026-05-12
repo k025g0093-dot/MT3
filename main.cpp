@@ -1,5 +1,6 @@
 ﻿#include <Novice.h>
 #include "Vector.h"
+#include <cstdint>
 const char kWindowTitle[] = "LE2B_29_ヤマトユウヤ_タイトル";
 
 
@@ -27,7 +28,16 @@ void vectorScreenPrintf(int x, int y, Vector3 vector, const char* label) {
 }
 #pragma endregion
 
+Vector3 rotate{};
+Vector3 translate{};
+Vector3 cameraPosition{ 0.0f,0.0f,-5.0f };
 
+// 頂点配列の定義（ローカル空間の三角形頂点）
+Vector3 kLocalVertices[3] = {
+	{ 0.0f,  1.0f, 0.0f },
+	{ 1.0f, -1.0f, 0.0f },
+	{-1.0f, -1.0f, 0.0f },
+};
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
@@ -36,11 +46,15 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	Novice::Initialize(kWindowTitle, 1280, 720);
 
 
-
+	Vector3 v1{ 1.2f,-3.9f,2.5f };
+	Vector3 v2{ 2.8f,0.4f,-1.3f };
 
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
+
+	float kWindowWidth = 1280.0f;
+	float kWindowHeight = 720.0f;
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -55,21 +69,69 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		/// ↓更新処理ここから
 		///
 
-		Matrix4x4 orthographicMatrix = MakeOrthographicMatrix(-160, 160, 200, 300, 0.0f, 1000.0f);
-		Matrix4x4 perspectiveMatrix = MakePerspectiveFovMatrix(0.63f, 1.33f, 0.1f, 1000.0f);
-		Matrix4x4 viewportMatrix = MakeViewportMatrix(100.0f, 200.0f, 600.0f, 300.0f, 0.0f, 1.0f);
+
+
+		Matrix4x4 worldMatrix= MakeAffineMatrix(
+			{1.0f,1.0f,1.0f}, rotate, translate);
+		
+		Matrix4x4 cameraMatrix=MakeAffineMatrix(
+			{ 1.0f,1.0f,1.0f }, { 0.0f,0.0f,0.0f }, cameraPosition);
+		
+		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+
+		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(
+			0.45f, kWindowWidth / kWindowHeight, 0.1f, 100.0f);
+
+		Matrix4x4 wordViewProjectionMatrix = Multiply(worldMatrix,Multiply(viewMatrix, projectionMatrix));
+
+		Matrix4x4 viewportMatrix = MakeViewportMatrix(
+			0.0f, 0.0f, kWindowWidth, kWindowHeight, 0.0f, 1.0f);
+
+		Vector3 screenVertices[3];
+
+		for (uint32_t i = 0;i < 3;++i) {
+			Vector3 ndcVertex = Transform(kLocalVertices[i], wordViewProjectionMatrix);
+			screenVertices[i] = Transform(ndcVertex, viewportMatrix);
+		}
+
+		rotate.y+=0.01f;
+
+		if(keys[DIK_W]){
+			translate.z+=0.1f;
+		}
+		if (keys[DIK_S]) {
+			translate.z -= 0.1f;
+		}
+
+		if (keys[DIK_D]) {
+			translate.x += 0.1f;
+		}
+		if (keys[DIK_A]) {
+			translate.x -= 0.1f;
+		}
+
+
+		//クロス積
+		Vector3 cross = Cross(v1, v2);
 
 		///
 		/// ↑更新処理ここまで
 		///
 
+		//表示関数
+		vectorScreenPrintf(0, 0, cross, "Cross");
+
+
+		Novice::DrawTriangle(
+			(int)screenVertices[0].x, (int)screenVertices[0].y,
+			(int)screenVertices[1].x, (int)screenVertices[1].y,
+			(int)screenVertices[2].x, (int)screenVertices[2].y,
+			0xFF0000FF, kFillModeSolid);
+
 		///
 		/// ↓描画処理ここから
 		///
 
-		MatrixScreenPrintf(0, 0, orthographicMatrix, "orthographicMatrix");
-		MatrixScreenPrintf(0, kRowHeight * 5, perspectiveMatrix, "perspectiveMatrix");
-		MatrixScreenPrintf(0, kRowHeight * 10, viewportMatrix, "viewportMatrix");
 
 
 		///
