@@ -48,11 +48,54 @@ Vector3 kLocalVertices[3] = {
 	{-1.0f, -1.0f, 0.0f },
 };
 
-
-
 float kWindowWidth = 1280.0f;
 float kWindowHeight = 720.0f;
 
+struct Line
+{
+	Vector3 origin;
+	Vector3 diff;
+};
+
+struct Ray
+{
+	Vector3 origin;
+	Vector3 diff;
+};
+
+struct Segment
+{
+	Vector3 origin;
+	Vector3 diff;
+};
+
+
+Vector3 Project(const Vector3& v1, const Vector3& v2) {
+
+
+	float t = Dot(v1, v2) / Dot(v2, v2);
+	Vector3 result{};
+
+	result.x = v2.x * t;
+	result.y = v2.y* t;
+	result.z = v2.z * t;
+
+	return result;
+}
+
+Vector3 ClosestPoint(const Vector3& point, const Segment& segment) {
+	Vector3 v = SubtractVector3(point, segment.origin);
+	float t = Dot(v, segment.diff) / Dot(segment.diff, segment.diff);
+
+	t = fmaxf(0.0f, fminf(t, 1.0f));
+
+	Vector3 result{};
+	result.x = segment.origin.x + (segment.diff.x * t);
+	result.y = segment.origin.y + (segment.diff.y * t);
+	result.z = segment.origin.z + (segment.diff.z * t);
+
+	return result;
+}
 
 
 
@@ -63,14 +106,15 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	// ライブラリの初期化
 	Novice::Initialize(kWindowTitle, 1280, 720);
 
-
+	Segment segment{ {-2.0f,-1.0f,0.0f},{3.0f,2.0f,2.0f} };
+	Vector3 point{ -1.5f,0.6f,0.6f };
+	
 
 
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
 
-	Sphere sphere{ {0.0f,0.0f,0.0f},1.0f };
 
 
 	// ウィンドウの×ボタンが押されるまでループ
@@ -104,42 +148,14 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(
 			0.0f, 0.0f, kWindowWidth, kWindowHeight, 0.0f, 1.0f);
 
-		Vector3 screenVertices[3];
-
-		for (uint32_t i = 0;i < 3;++i) {
-			Vector3 ndcVertex = Transform(kLocalVertices[i], wordViewProjectionMatrix);
-			screenVertices[i] = Transform(ndcVertex, viewportMatrix);
-		}
-
-
-		if(keys[DIK_W]){
-			translate.z+=0.1f;
-		}
-		if (keys[DIK_S]) {
-			translate.z -= 0.1f;
-		}
-
-		if (keys[DIK_D]) {
-			translate.x += 0.1f;
-		}
-		if (keys[DIK_A]) {
-			translate.x -= 0.1f;
-		}
-
-		if (keys[DIK_Q]) {
-			rotate.y -= 0.1f;
-		}
-		if (keys[DIK_E]) {
-			rotate.y += 0.1f;
-		}
+		Vector3 project = Project(SubtractVector3(point, segment.origin), segment.diff);
+		Vector3 closestPoint = ClosestPoint(point, segment);
 
 #ifdef _DEBUG
 
 		ImGui::Begin("Window");
 		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
 		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
-		ImGui::DragFloat3("SphereCenter", &sphere.center.x, 0.01f);
-		ImGui::DragFloat3("SphereRadius", &sphere.radius, 0.01f);
 		ImGui::End();
 
 
@@ -150,12 +166,16 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		/// ↑更新処理ここまで
 		///
 
-		//表示関数
+		Sphere pointSpere{ point,0.01f };
+		Sphere closestPointSphere{ closestPoint,0.01f };
 
+		DrawSphere(pointSpere, wordViewProjectionMatrix, viewportMatrix, RED);
+		DrawSphere(closestPointSphere, wordViewProjectionMatrix, viewportMatrix, BLACK);
 
+		Vector3 start = Transform(Transform(segment.origin, wordViewProjectionMatrix), viewportMatrix);
+		Vector3 End= Transform(Transform(AddVector3(segment.origin,segment.diff),wordViewProjectionMatrix),viewportMatrix);
 
-
-		DrawSphere(sphere,wordViewProjectionMatrix, viewportMatrix,0x000000FF);
+		Novice::DrawLine(int(start.x),int(start.y),int (End.x),int(End.y),0xFFFFFFFF);
 
 		DrawGrid(wordViewProjectionMatrix, viewportMatrix);
 
