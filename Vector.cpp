@@ -497,3 +497,38 @@ float Length(const Vector3& v1) {
 	result = sqrt(result);
 	return result;
 }
+
+Vector3 MultiplyVector3(
+	const float v1,
+	const Vector3& v2) 
+{
+
+	Vector3  result{};
+
+	result.x = v2.x * v1;
+	result.y = v2.y * v1;
+	result.z = v2.z * v1;
+
+	return result;
+
+}
+
+Vector3 Normalize(Vector3 normal)
+{
+	Vector3 result{};
+
+	// 1. まずベクトルの長さを計算する（自作のLength関数を使う！）
+	float len = Length(normal);
+
+	// 2. 長さが 0 のときは割り算できない（ゼロ除算防止）ので、そのまま返す
+	if (len == 0.0f) {
+		return normal;
+	}
+
+	// 3. 各成分を「長さ」で割ることで、全体の長さを「1」にする
+	result.x = normal.x / len;
+	result.y = normal.y / len;
+	result.z = normal.z / len;
+
+	return result;
+}

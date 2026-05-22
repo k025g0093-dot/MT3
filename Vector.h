@@ -40,3 +40,5 @@ Vector3 SubtractVector3(const Vector3& v1, const Vector3& v2);
 float Dot(const Vector3& v1, const Vector3& v2);
 Vector3 AddVector3(const Vector3& v1, const Vector3& v2);
 float Length(const Vector3& v1);
+Vector3 MultiplyVector3(const float v1,const Vector3&v2);
+Vector3 Normalize(Vector3 normal);

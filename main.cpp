@@ -1,7 +1,7 @@
 ﻿#include <Novice.h>
 #include "Vector.h"
 #include <cstdint>
-#include "math.h"
+#include<cmath>
 #include "Grid.h"
 #include "Sphere.h"
 #ifdef _DEBUG
@@ -53,8 +53,9 @@ Vector3 kLocalVertices[3] = {
 float kWindowWidth = 1280.0f;
 float kWindowHeight = 720.0f;
 
-
-
+Vector3 planePos{ 0.0f,1.0f,0.0f };
+float planeRadius = 1.0f;
+Plane plane{ planePos,planeRadius };
 
 Vector3 spherePos1{ 2.0f,0.0f,0.0f };
 Vector3 spherePos2{ -2.0f,0.0f,0.0f };
@@ -112,20 +113,19 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			0.0f, 0.0f, kWindowWidth, kWindowHeight, 0.0f, 1.0f);
 
 
-		if (IsCollision(Sphere1,Sphere2)) {
+		
+
+		Sphere1.center = spherePos1;
+		Sphere1.radius = radiusSphere1;
+
+		plane.normal = Normalize(planePos);
+		plane.distance = planeRadius;
+		if (IsCollisionPlane(Sphere1, plane)) {
 			isClro = true;
 		}
 		else {
 			isClro = false;
 		}
-
-		Sphere1.center = spherePos1;
-		Sphere2.center = spherePos2;
-		Sphere1.radius = radiusSphere1;
-		Sphere2.radius = radiusSphere2;
-
-
-
 #ifdef _DEBUG
 
 		ImGui::Begin("Window");
@@ -133,8 +133,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		ImGui::DragFloat3("spherePos1", &spherePos1.x, 0.01f);
 		ImGui::DragFloat("radiusSphere1", &radiusSphere1, 0.01f);
 
-		ImGui::DragFloat3("spherePos2", &spherePos2.x, 0.01f);
-		ImGui::DragFloat("radiusSphere2", &radiusSphere2, 0.01f);
+		ImGui::DragFloat3("spherePos2", &planePos.x, 0.01f);
+		ImGui::DragFloat("radiusSphere2", &planeRadius, 0.01f);
 
 
 		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
@@ -152,9 +152,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		///
 
 
-
+		DrawPlane(plane, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
 		DrawSphere(Sphere1, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
-		DrawSphere(Sphere2, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
 
 		DrawGrid(wordViewProjectionMatrix, viewportMatrix);
 
