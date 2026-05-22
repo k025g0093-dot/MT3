@@ -2,7 +2,7 @@
 #include "Novice.h"
 #include "Vector.h"
 #include <cstdint>
-#include "math.h"
+#include<cmath>
 
 constexpr auto pi = 3.14159265355f;//πの宣言
 
