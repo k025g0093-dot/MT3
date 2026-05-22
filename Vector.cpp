@@ -488,3 +488,12 @@ Vector3 AddVector3(
 	return result;
 
 }
+
+float Length(const Vector3& v1) {
+
+	float result{};
+
+	result = (v1.x * v1.x +v1.y * v1.y +v1.z * v1.z );
+	result = sqrt(result);
+	return result;
+}
