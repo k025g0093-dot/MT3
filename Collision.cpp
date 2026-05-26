@@ -19,3 +19,23 @@ bool IsCollisionPlane(const Sphere& s1, const Plane& p1) {
     }
     return false;
 }
+
+bool isLineCollisionPlame(
+    const Segment& segment,
+    const Plane& plane)
+{
+
+    float dot = Dot(plane.normal, segment.diff);
+    if (dot == 0.0f) {
+        return false;
+    }
+
+    float t = (plane.distance - Dot(segment.origin, plane.normal)) / dot;
+
+
+    if (t >= 0.0f && t <= 1.0f) {
+        return true;
+    }
+    return false;
+
+}
