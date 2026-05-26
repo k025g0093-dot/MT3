@@ -4,6 +4,7 @@
 #include<cmath>
 #include "Grid.h"
 #include "Sphere.h"
+#include "Segment.h"
 #ifdef _DEBUG
 #include<imgui.h>
 #endif
@@ -43,13 +44,6 @@ Vector3 translate{};
 Vector3 cameraTranslate{ 0.0f,1.9f,-6.49f };
 Vector3 cameraRotate{ 0.26f,0.0f,0.0f };
 
-// 頂点配列の定義（ローカル空間の三角形頂点）
-Vector3 kLocalVertices[3] = {
-	{ 0.0f,  1.0f, 0.0f },
-	{ 1.0f, -1.0f, 0.0f },
-	{-1.0f, -1.0f, 0.0f },
-};
-
 float kWindowWidth = 1280.0f;
 float kWindowHeight = 720.0f;
 
@@ -57,14 +51,7 @@ Vector3 planePos{ 0.0f,1.0f,0.0f };
 float planeRadius = 1.0f;
 Plane plane{ planePos,planeRadius };
 
-Vector3 spherePos1{ 2.0f,0.0f,0.0f };
-Vector3 spherePos2{ -2.0f,0.0f,0.0f };
-float radiusSphere1 = 1.0f;
-float radiusSphere2 = 1.0f;
-
-Sphere Sphere1{ spherePos1,radiusSphere1 };
-Sphere Sphere2{ spherePos2,radiusSphere2 };
-
+Segment segment{ {-2.0f,-1.0f,0.0f},{3.0f,2.0f,2.0f} };
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
@@ -72,14 +59,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	// ライブラリの初期化
 	Novice::Initialize(kWindowTitle, 1280, 720);
 
-
-
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
 
 	bool isClro = false;
-
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -93,8 +77,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		///
 		/// ↓更新処理ここから
 		///
-
-
 
 		Matrix4x4 worldMatrix = MakeAffineMatrix(
 			{ 1.0f,1.0f,1.0f }, rotate, translate);
@@ -112,38 +94,30 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(
 			0.0f, 0.0f, kWindowWidth, kWindowHeight, 0.0f, 1.0f);
 
-
-		
-
-		Sphere1.center = spherePos1;
-		Sphere1.radius = radiusSphere1;
-
 		plane.normal = Normalize(planePos);
 		plane.distance = planeRadius;
-		if (IsCollisionPlane(Sphere1, plane)) {
+
+		if (isLineCollisionPlame(segment, plane)) {
 			isClro = true;
 		}
 		else {
 			isClro = false;
 		}
+
 #ifdef _DEBUG
 
 		ImGui::Begin("Window");
 
-		ImGui::DragFloat3("spherePos1", &spherePos1.x, 0.01f);
-		ImGui::DragFloat("radiusSphere1", &radiusSphere1, 0.01f);
+		ImGui::DragFloat3("PlaneNormal", &planePos.x, 0.01f);
+		ImGui::DragFloat("PlaneDistance", &planeRadius, 0.01f);
 
-		ImGui::DragFloat3("spherePos2", &planePos.x, 0.01f);
-		ImGui::DragFloat("radiusSphere2", &planeRadius, 0.01f);
-
+		ImGui::DragFloat3("SegmentOrigin", &segment.origin.x, 0.01f);
+		ImGui::DragFloat3("SegmentDiff", &segment.diff.x, 0.01f);
 
 		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
 		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
 
-
 		ImGui::End();
-
-
 
 #endif // _DEBUG
 
@@ -151,12 +125,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		/// ↑更新処理ここまで
 		///
 
-
+		DrawSegment(segment, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
 		DrawPlane(plane, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
-		DrawSphere(Sphere1, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
-
 		DrawGrid(wordViewProjectionMatrix, viewportMatrix);
-
 
 		///
 		/// ↓描画処理ここから
