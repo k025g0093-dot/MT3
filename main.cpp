@@ -5,14 +5,13 @@
 #include "Grid.h"
 #include "Sphere.h"
 #include "Segment.h"
+#include "Triangle.h"
 #ifdef _DEBUG
 #include<imgui.h>
 #endif
 #include "Collision.h"
 
 const char kWindowTitle[] = "LE2B_29_ヤマトユウヤ_タイトル";
-
-
 
 static const int kRowHeight = 20;
 static const int kColumnWidth = 60;
@@ -22,11 +21,9 @@ void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix, const char* label
 		for (int column = 0; column < 4; ++column) {
 			Novice::ScreenPrintf(
 				x + column * kColumnWidth, y + row * kRowHeight, "%6.02f", matrix.m[row][column]);
-
 		}
 	}
 	Novice::ScreenPrintf(x, y - kRowHeight, "%s", label);
-
 }
 
 #pragma region ヴェクトル型の表示関数
@@ -47,9 +44,7 @@ Vector3 cameraRotate{ 0.26f,0.0f,0.0f };
 float kWindowWidth = 1280.0f;
 float kWindowHeight = 720.0f;
 
-Vector3 planePos{ 0.0f,1.0f,0.0f };
-float planeRadius = 1.0f;
-Plane plane{ planePos,planeRadius };
+Triangle triangle{ { {0.0f,1.0f,0.0f}, {1.0f,-1.0f,0.0f}, {-1.0f,-1.0f,0.0f} } };
 
 Segment segment{ {-2.0f,-1.0f,0.0f},{3.0f,2.0f,2.0f} };
 
@@ -94,10 +89,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(
 			0.0f, 0.0f, kWindowWidth, kWindowHeight, 0.0f, 1.0f);
 
-		plane.normal = Normalize(planePos);
-		plane.distance = planeRadius;
-
-		if (isLineCollisionPlame(segment, plane)) {
+		if (isTraiangleCollisionLine(triangle, segment)) {
 			isClro = true;
 		}
 		else {
@@ -108,8 +100,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 		ImGui::Begin("Window");
 
-		ImGui::DragFloat3("PlaneNormal", &planePos.x, 0.01f);
-		ImGui::DragFloat("PlaneDistance", &planeRadius, 0.01f);
+		ImGui::DragFloat3("TriangleV0", &triangle.vertices[0].x, 0.01f);
+		ImGui::DragFloat3("TriangleV1", &triangle.vertices[1].x, 0.01f);
+		ImGui::DragFloat3("TriangleV2", &triangle.vertices[2].x, 0.01f);
 
 		ImGui::DragFloat3("SegmentOrigin", &segment.origin.x, 0.01f);
 		ImGui::DragFloat3("SegmentDiff", &segment.diff.x, 0.01f);
@@ -126,7 +119,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		///
 
 		DrawSegment(segment, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
-		DrawPlane(plane, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
+		DrawTriangle(triangle, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
 		DrawGrid(wordViewProjectionMatrix, viewportMatrix);
 
 		///

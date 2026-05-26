@@ -39,3 +39,43 @@ bool isLineCollisionPlame(
     return false;
 
 }
+
+
+
+bool isTraiangleCollisionLine(
+    const Triangle& tri,
+    const Segment& segment)
+{
+    Vector3 edge01 = SubtractVector3(tri.vertices[1], tri.vertices[0]);
+    Vector3 edge12 = SubtractVector3(tri.vertices[2], tri.vertices[1]);
+    Vector3 edge20 = SubtractVector3(tri.vertices[0], tri.vertices[2]);
+
+    Vector3 normal = Normalize(Cross(edge01, edge12));
+    float distance = Dot(normal, tri.vertices[0]);
+
+    Plane plane{ normal, distance };
+
+    if (!isLineCollisionPlame(segment, plane)) {
+        return false;
+    }
+
+    float t = (distance - Dot(segment.origin, normal)) / Dot(normal, segment.diff);
+    Vector3 point = {
+        segment.origin.x + segment.diff.x * t,
+        segment.origin.y + segment.diff.y * t,
+        segment.origin.z + segment.diff.z * t,
+    };
+
+    Vector3 cross01 = Cross(edge01, SubtractVector3(point, tri.vertices[0]));
+    Vector3 cross12 = Cross(edge12, SubtractVector3(point, tri.vertices[1]));
+    Vector3 cross20 = Cross(edge20, SubtractVector3(point, tri.vertices[2]));
+
+    if (Dot(normal, cross01) >= 0.0f &&
+        Dot(normal, cross12) >= 0.0f &&
+        Dot(normal, cross20) >= 0.0f) {
+        return true;
+    }
+
+    return false;
+}
+
