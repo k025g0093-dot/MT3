@@ -1,4 +1,4 @@
-#include "Collision.h"
+﻿#include "Collision.h"
 
 bool IsCollision(const Sphere& s1, const Sphere& s2) {
 
@@ -107,6 +107,33 @@ bool isAABBToSphereCollision(
 	};
 	float distance = Length(SubtractVector3(sphere.center, closestPoint));
 	if (distance <= sphere.radius) {
+		return true;
+	}
+	return false;
+}
+
+
+bool isAABBToLineCollision(
+	const AABB& aabb,
+	const Segment& segment) {
+
+	// 1. 各軸の壁（スラブ）に到達する時間を計算
+	float txMin = (aabb.min.x - segment.origin.x) / segment.diff.x;
+	float tyMin = (aabb.min.y - segment.origin.y) / segment.diff.y;
+	float tzMin = (aabb.min.z - segment.origin.z) / segment.diff.z;
+
+	float txMax = (aabb.max.x - segment.origin.x) / segment.diff.x;
+	float tyMax = (aabb.max.y - segment.origin.y) / segment.diff.y;
+	float tzMax = (aabb.max.z - segment.origin.z) / segment.diff.z;
+
+	if (txMin > txMax) { std::swap(txMin, txMax); }
+	if (tyMin > tyMax) { std::swap(tyMin, tyMax); }
+	if (tzMin > tzMax) { std::swap(tzMin, tzMax); }
+
+	float tMin = max(max(txMin, tyMin), tzMin);
+	float tMax = min(min(txMax, tyMax), tzMax);
+
+	if (tMin <= tMax) {
 		return true;
 	}
 	return false;
