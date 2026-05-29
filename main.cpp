@@ -6,6 +6,7 @@
 #include "Sphere.h"
 #include "Segment.h"
 #include "Triangle.h"
+#include "DarwBox.h"
 #ifdef _DEBUG
 #include<imgui.h>
 #endif
@@ -44,9 +45,14 @@ Vector3 cameraRotate{ 0.26f,0.0f,0.0f };
 float kWindowWidth = 1280.0f;
 float kWindowHeight = 720.0f;
 
-Triangle triangle{ { {0.0f,1.0f,0.0f}, {1.0f,-1.0f,0.0f}, {-1.0f,-1.0f,0.0f} } };
-
-Segment segment{ {-2.0f,-1.0f,0.0f},{3.0f,2.0f,2.0f} };
+AABB aabb1{
+	{-0.5f,-0.5f,-0.5f},
+	{0,0,0}
+};
+AABB aabb2{
+	{0.2f,0.2f,0.2f},
+	{1.0f,1.0f,1.0f}
+};
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
@@ -89,7 +95,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(
 			0.0f, 0.0f, kWindowWidth, kWindowHeight, 0.0f, 1.0f);
 
-		if (isTraiangleCollisionLine(triangle, segment)) {
+		if (isAABBToAABBCollision(aabb1, aabb2)) {
 			isClro = true;
 		}
 		else {
@@ -97,29 +103,35 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		}
 
 #ifdef _DEBUG
-
 		ImGui::Begin("Window");
 
-		ImGui::DragFloat3("TriangleV0", &triangle.vertices[0].x, 0.01f);
-		ImGui::DragFloat3("TriangleV1", &triangle.vertices[1].x, 0.01f);
-		ImGui::DragFloat3("TriangleV2", &triangle.vertices[2].x, 0.01f);
+		// --- カメラの操作 ---
+		if (ImGui::CollapsingHeader("Camera")) {
+			ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
+			ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
+		}
 
-		ImGui::DragFloat3("SegmentOrigin", &segment.origin.x, 0.01f);
-		ImGui::DragFloat3("SegmentDiff", &segment.diff.x, 0.01f);
+		// --- AABB 1 の操作 ---
+		if (ImGui::CollapsingHeader("AABB 1")) {
+			ImGui::DragFloat3("AABB1 Min", &aabb1.min.x, 0.01f);
+			ImGui::DragFloat3("AABB1 Max", &aabb1.max.x, 0.01f);
+		}
 
-		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
-		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
+		// --- AABB 2 の操作 ---
+		if (ImGui::CollapsingHeader("AABB 2")) {
+			ImGui::DragFloat3("AABB2 Min", &aabb2.min.x, 0.01f);
+			ImGui::DragFloat3("AABB2 Max", &aabb2.max.x, 0.01f);
+		}
 
 		ImGui::End();
-
 #endif // _DEBUG
 
 		///
 		/// ↑更新処理ここまで
 		///
 
-		DrawSegment(segment, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
-		DrawTriangle(triangle, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
+		DrawBox(aabb1, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
+		DrawBox(aabb2, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
 		DrawGrid(wordViewProjectionMatrix, viewportMatrix);
 
 		///
