@@ -49,9 +49,10 @@ AABB aabb1{
 	{-0.5f,-0.5f,-0.5f},
 	{0,0,0}
 };
-AABB aabb2{
-	{0.2f,0.2f,0.2f},
-	{1.0f,1.0f,1.0f}
+
+Sphere sphere1{
+	{0.0f,0.0f,0.0f},
+	0.5f
 };
 
 // Windowsアプリでのエントリーポイント(main関数)
@@ -95,12 +96,19 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(
 			0.0f, 0.0f, kWindowWidth, kWindowHeight, 0.0f, 1.0f);
 
-		if (isAABBToAABBCollision(aabb1, aabb2)) {
+		if (isAABBToSphereCollision(aabb1, sphere1)) {
 			isClro = true;
 		}
 		else {
 			isClro = false;
 		}
+
+		aabb1.min.x = (std::min)(aabb1.min.x, aabb1.max.x);
+		aabb1.max.x = (std::max)(aabb1.min.x, aabb1.max.x);
+		aabb1.min.y = (std::min)(aabb1.min.y, aabb1.max.y);
+		aabb1.max.y = (std::max)(aabb1.min.y, aabb1.max.y);
+		aabb1.min.z = (std::min)(aabb1.min.z, aabb1.max.z);
+		aabb1.max.z = (std::max)(aabb1.min.z, aabb1.max.z);
 
 #ifdef _DEBUG
 		ImGui::Begin("Window");
@@ -117,11 +125,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			ImGui::DragFloat3("AABB1 Max", &aabb1.max.x, 0.01f);
 		}
 
-		// --- AABB 2 の操作 ---
-		if (ImGui::CollapsingHeader("AABB 2")) {
-			ImGui::DragFloat3("AABB2 Min", &aabb2.min.x, 0.01f);
-			ImGui::DragFloat3("AABB2 Max", &aabb2.max.x, 0.01f);
+		// --- Sphere 1 (球) の操作 ---
+		if (ImGui::CollapsingHeader("Sphere 1")) {
+			ImGui::DragFloat3("Sphere Center", &sphere1.center.x, 0.01f);
+			ImGui::DragFloat("Sphere Radius", &sphere1.radius, 0.01f, 0.01f, 10.0f); // 半径は浮動小数点1つ
 		}
+
 
 		ImGui::End();
 #endif // _DEBUG
@@ -131,7 +140,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		///
 
 		DrawBox(aabb1, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
-		DrawBox(aabb2, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
+		DrawSphere(sphere1, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
 		DrawGrid(wordViewProjectionMatrix, viewportMatrix);
 
 		///

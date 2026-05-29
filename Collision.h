@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <iostream>
 #include <string>
+#include <algorithm>
 #include "Sphere.h"
 #include "plane.h"
 #include "Segment.h"
@@ -19,3 +20,5 @@ bool isLineCollisionPlame(const Segment& segment, const Plane& plane);
 bool isTraiangleCollisionLine(const Triangle& tri, const Segment& segment);
 
 bool isAABBToAABBCollision(const AABB& aabb1, const AABB& aabb2);
+
+bool isAABBToSphereCollision(const AABB& aabb, const Sphere& sphere);
