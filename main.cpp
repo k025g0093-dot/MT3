@@ -50,9 +50,9 @@ AABB aabb1{
 	{0,0,0}
 };
 
-Sphere sphere1{
-	{0.0f,0.0f,0.0f},
-	0.5f
+Segment segment{
+	{-0.7f,0.3f,0.0f},
+	{2.0f,-0.5f,0.0f}
 };
 
 // Windowsアプリでのエントリーポイント(main関数)
@@ -96,7 +96,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(
 			0.0f, 0.0f, kWindowWidth, kWindowHeight, 0.0f, 1.0f);
 
-		if (isAABBToSphereCollision(aabb1, sphere1)) {
+		if (isAABBToLineCollision(aabb1, segment)) {
 			isClro = true;
 		}
 		else {
@@ -125,10 +125,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			ImGui::DragFloat3("AABB1 Max", &aabb1.max.x, 0.01f);
 		}
 
-		// --- Sphere 1 (球) の操作 ---
-		if (ImGui::CollapsingHeader("Sphere 1")) {
-			ImGui::DragFloat3("Sphere Center", &sphere1.center.x, 0.01f);
-			ImGui::DragFloat("Sphere Radius", &sphere1.radius, 0.01f, 0.01f, 10.0f); // 半径は浮動小数点1つ
+		// --- Segment 1 の操作 ---
+		if (ImGui::CollapsingHeader("Segment 1")) {
+			ImGui::DragFloat3("Segment Origin", &segment.origin.x, 0.01f);
+			ImGui::DragFloat3("Segment Diff", &segment.diff.x, 0.01f);
 		}
 
 
@@ -140,7 +140,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		///
 
 		DrawBox(aabb1, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
-		DrawSphere(sphere1, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
+		DrawSegment(segment, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
 		DrawGrid(wordViewProjectionMatrix, viewportMatrix);
 
 		///

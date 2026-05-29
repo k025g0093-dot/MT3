@@ -22,3 +22,5 @@ bool isTraiangleCollisionLine(const Triangle& tri, const Segment& segment);
 bool isAABBToAABBCollision(const AABB& aabb1, const AABB& aabb2);
 
 bool isAABBToSphereCollision(const AABB& aabb, const Sphere& sphere);
+
+bool isAABBToLineCollision(const AABB& aabb, const Segment& segment);
