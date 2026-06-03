@@ -116,26 +116,54 @@ bool isAABBToSphereCollision(
 bool isAABBToLineCollision(
 	const AABB& aabb,
 	const Segment& segment) {
-
+	float tMin = 0.0f;
+	float tMax = 1.0f;
 	// 1. 各軸の壁（スラブ）に到達する時間を計算
-	float txMin = (aabb.min.x - segment.origin.x) / segment.diff.x;
-	float tyMin = (aabb.min.y - segment.origin.y) / segment.diff.y;
-	float tzMin = (aabb.min.z - segment.origin.z) / segment.diff.z;
+	if (segment.diff.x == 0.0f) {
+		if (segment.origin.x < aabb.min.x || segment.origin.x > aabb.max.x) {
+			return false;  // AABBの範囲外なら衝突しない
+		}
+	}
+	else {
+		float txMin = (aabb.min.x - segment.origin.x) / segment.diff.x;
+		float txMax = (aabb.max.x - segment.origin.x) / segment.diff.x;
+		if (txMin > txMax) { std::swap(txMin, txMax); }
+		tMin = max(tMin, txMin);
+		tMax = min(tMax, txMax);
+	}
 
-	float txMax = (aabb.max.x - segment.origin.x) / segment.diff.x;
-	float tyMax = (aabb.max.y - segment.origin.y) / segment.diff.y;
-	float tzMax = (aabb.max.z - segment.origin.z) / segment.diff.z;
+	if (segment.diff.y == 0.0f) {
+		if (segment.origin.y < aabb.min.y || segment.origin.y > aabb.max.y) {
+			return false;
+		}
+	}
+	else {
 
-	if (txMin > txMax) { std::swap(txMin, txMax); }
-	if (tyMin > tyMax) { std::swap(tyMin, tyMax); }
-	if (tzMin > tzMax) { std::swap(tzMin, tzMax); }
+		float tyMin = (aabb.min.y - segment.origin.y) / segment.diff.y;
+		float tyMax = (aabb.max.y - segment.origin.y) / segment.diff.y;
+		if (tyMin > tyMax) { std::swap(tyMin, tyMax); }
+		tMin = max(tMin, tyMin);
+		tMax = min(tMax, tyMax);
+	}
+	
+	if (segment.diff.z == 0.0f) {
+		if (segment.origin.z < aabb.min.z || segment.origin.z > aabb.max.z) {
+			return false;
+		}
+	}
+	else {
+		float tzMin = (aabb.min.z - segment.origin.z) / segment.diff.z;
+		float tzMax = (aabb.max.z - segment.origin.z) / segment.diff.z;
 
-	float tMin = max(max(txMin, tyMin), tzMin);
-	float tMax = min(min(txMax, tyMax), tzMax);
+		if (tzMin > tzMax) { std::swap(tzMin, tzMax); }
+		tMin = max(tMin, tzMin);
+		tMax = min(tMax, tzMax);
+	}
 
 	if (tMin <= tMax) {
 		return true;
 	}
-	return false;
+
+return false;
 }
 
