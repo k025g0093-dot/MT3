@@ -167,3 +167,23 @@ bool isAABBToLineCollision(
 return false;
 }
 
+
+bool isOBBToSphereCollision(
+	const OBB& obb,
+	const Sphere& sphere
+) {
+	
+	Vector3 centerInOBBLocalSpace = Transform(sphere.center, Inverse(MakeAffineMatrix({ 1.0f, 1.0f, 1.0f },
+	(obb.orientations[0], obb.orientations[1], obb.orientations[2]), obb.center)));
+	Vector3 closestPoint = {
+		std::clamp(centerInOBBLocalSpace.x,-obb.size.x/2.0f,obb.size.x/2.0f),
+		std::clamp(centerInOBBLocalSpace.y,-obb.size.y/2.0f,obb.size.y/2.0f),
+		std::clamp(centerInOBBLocalSpace.z,-obb.size.z/2.0f,obb.size.z/2.0f),
+	};
+	float distance = Length(SubtractVector3(centerInOBBLocalSpace, closestPoint));
+	if (distance <= sphere.radius) {
+		return true;
+	}
+	return false;
+
+}

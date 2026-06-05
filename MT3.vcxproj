@@ -164,6 +164,7 @@ xcopy C:\KamataEngine\DirectXGame\Resources "$(OutDirFullPath)NoviceResources" /
     <ClCompile Include="DarwBox.cpp" />
     <ClCompile Include="Grid.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="OBB.cpp" />
     <ClCompile Include="plane.cpp" />
     <ClCompile Include="Segment.cpp" />
     <ClCompile Include="Sphere.cpp" />
@@ -201,6 +202,7 @@ xcopy C:\KamataEngine\DirectXGame\Resources "$(OutDirFullPath)NoviceResources" /
     <ClInclude Include="Collision.h" />
     <ClInclude Include="DarwBox.h" />
     <ClInclude Include="Grid.h" />
+    <ClInclude Include="OBB.h" />
     <ClInclude Include="plane.h" />
     <ClInclude Include="Segment.h" />
     <ClInclude Include="Sphere.h" />
