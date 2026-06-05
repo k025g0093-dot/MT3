@@ -6,5 +6,5 @@ void DrawOBB(
 	const Matrix4x4& viewportMatrix,
 	int color)
 {
-
+	
 }
