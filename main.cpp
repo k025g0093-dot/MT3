@@ -7,6 +7,7 @@
 #include "Segment.h"
 #include "Triangle.h"
 #include "DarwBox.h"
+#include "OBB.h"
 #ifdef _DEBUG
 #include<imgui.h>
 #endif
@@ -45,14 +46,21 @@ Vector3 cameraRotate{ 0.26f,0.0f,0.0f };
 float kWindowWidth = 1280.0f;
 float kWindowHeight = 720.0f;
 
-AABB aabb1{
-	{-0.5f,-0.5f,-0.5f},
-	{0,0,0}
+// 既存のobbの宣言の近くに、OBB専用の回転変数を追加
+Vector3 obbRotate{ 0.0f, 0.0f, 0.0f };
+OBB obb{
+	{0.0f,0.0f,0.0f},
+	{
+		{1.0f,0.0f,0.0f},
+		{0.0f,1.0f,0.0f},
+		{0.0f,0.0f,1.0f}
+	},
+	{1.0f,1.0f,1.0f}
 };
 
-Segment segment{
-	{-0.7f,0.3f,0.0f},
-	{2.0f,-0.5f,0.0f}
+Sphere sphere{
+	{1.0f, 0.0f, 0.0f}, // 中心座標 (X: 1.0, Y: 0.0, Z: 0.0)
+	0.5f                // 半径 (Radius: 0.5)
 };
 
 // Windowsアプリでのエントリーポイント(main関数)
@@ -96,19 +104,29 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(
 			0.0f, 0.0f, kWindowWidth, kWindowHeight, 0.0f, 1.0f);
 
-		if (isAABBToLineCollision(aabb1, segment)) {
+
+		Matrix4x4 obbRotateMatrix = Multiply(MakeRotateXMatrix(obbRotate.x), Multiply(MakeRotateYMatrix(obbRotate.y), MakeRotateZMatrix(obbRotate.z)));
+
+		obb.orientations[0].x = obbRotateMatrix.m[0][0];
+		obb.orientations[0].y = obbRotateMatrix.m[0][1];
+		obb.orientations[0].z = obbRotateMatrix.m[0][2];
+
+		obb.orientations[1].x = obbRotateMatrix.m[1][0];
+		obb.orientations[1].y = obbRotateMatrix.m[1][1];
+		obb.orientations[1].z = obbRotateMatrix.m[1][2];
+
+		obb.orientations[2].x = obbRotateMatrix.m[2][0];
+		obb.orientations[2].y = obbRotateMatrix.m[2][1];
+		obb.orientations[2].z = obbRotateMatrix.m[2][2];
+
+
+		if (isOBBToSphereCollision(obb, sphere)) {
 			isClro = true;
 		}
 		else {
 			isClro = false;
 		}
 
-		aabb1.min.x = (std::min)(aabb1.min.x, aabb1.max.x);
-		aabb1.max.x = (std::max)(aabb1.min.x, aabb1.max.x);
-		aabb1.min.y = (std::min)(aabb1.min.y, aabb1.max.y);
-		aabb1.max.y = (std::max)(aabb1.min.y, aabb1.max.y);
-		aabb1.min.z = (std::min)(aabb1.min.z, aabb1.max.z);
-		aabb1.max.z = (std::max)(aabb1.min.z, aabb1.max.z);
 
 #ifdef _DEBUG
 		ImGui::Begin("Window");
@@ -119,16 +137,17 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
 		}
 
-		// --- AABB 1 の操作 ---
-		if (ImGui::CollapsingHeader("AABB 1")) {
-			ImGui::DragFloat3("AABB1 Min", &aabb1.min.x, 0.01f);
-			ImGui::DragFloat3("AABB1 Max", &aabb1.max.x, 0.01f);
+		// --- OBB の操作 ---
+		if (ImGui::CollapsingHeader("OBB")) {
+			ImGui::DragFloat3("OBB Center", &obb.center.x, 0.01f);
+			ImGui::DragFloat3("OBB Rotate", &obbRotate.x, 0.01f); // 【ここを変更！】
+			ImGui::DragFloat3("OBB Size", &obb.size.x, 0.01f);
 		}
 
-		// --- Segment 1 の操作 ---
-		if (ImGui::CollapsingHeader("Segment 1")) {
-			ImGui::DragFloat3("Segment Origin", &segment.origin.x, 0.01f);
-			ImGui::DragFloat3("Segment Diff", &segment.diff.x, 0.01f);
+		// --- Sphere の操作 ---
+		if (ImGui::CollapsingHeader("Sphere")) {
+			ImGui::DragFloat3("Sphere Center", &sphere.center.x, 0.01f);
+			ImGui::DragFloat3("Sphere Radius", &sphere.radius, 0.01f, 0.01f, 10.0f);
 		}
 
 
@@ -138,9 +157,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		///
 		/// ↑更新処理ここまで
 		///
-
-		DrawBox(aabb1, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
-		DrawSegment(segment, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
+		DrawOBB(obb, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
+		DrawSphere(sphere, wordViewProjectionMatrix, viewportMatrix, WHITE);
 		DrawGrid(wordViewProjectionMatrix, viewportMatrix);
 
 		///
