@@ -172,9 +172,35 @@ bool isOBBToSphereCollision(
 	const OBB& obb,
 	const Sphere& sphere
 ) {
-	
-	Vector3 centerInOBBLocalSpace = Transform(sphere.center, Inverse(MakeAffineMatrix({ 1.0f, 1.0f, 1.0f },
-	(obb.orientations[0], obb.orientations[1], obb.orientations[2]), obb.center)));
+
+	Matrix4x4 obbWorldMatrix;
+
+	obbWorldMatrix.m[0][0]= obb.orientations[0].x;
+	obbWorldMatrix.m[0][1]= obb.orientations[0].y;
+	obbWorldMatrix.m[0][2]= obb.orientations[0].z;
+	obbWorldMatrix.m[0][3]= 0.0f;
+
+
+	obbWorldMatrix.m[1][0] = obb.orientations[1].x;
+	obbWorldMatrix.m[1][1] = obb.orientations[1].y;
+	obbWorldMatrix.m[1][2] = obb.orientations[1].z;
+	obbWorldMatrix.m[1][3] = 0.0f;
+
+	// ※ Z軸の向き
+	obbWorldMatrix.m[2][0] = obb.orientations[2].x;
+	obbWorldMatrix.m[2][1] = obb.orientations[2].y;
+	obbWorldMatrix.m[2][2] = obb.orientations[2].z;
+	obbWorldMatrix.m[2][3] = 0.0f;
+
+	// 3. 移動成分（中心座標）をハメ込む！
+	obbWorldMatrix.m[3][0] = obb.center.x;
+	obbWorldMatrix.m[3][1] = obb.center.y;
+	obbWorldMatrix.m[3][2] = obb.center.z;
+	obbWorldMatrix.m[3][3] = 1.0f; // ここは決まり文句の 1.0
+
+	// 4. あとはこの行列の Inverse（逆行列）を使えば、100%正確なローカル空間へ！
+	Vector3 centerInOBBLocalSpace = Transform(sphere.center, Inverse(obbWorldMatrix));
+
 	Vector3 closestPoint = {
 		std::clamp(centerInOBBLocalSpace.x,-obb.size.x/2.0f,obb.size.x/2.0f),
 		std::clamp(centerInOBBLocalSpace.y,-obb.size.y/2.0f,obb.size.y/2.0f),
