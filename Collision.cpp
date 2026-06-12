@@ -113,7 +113,7 @@ bool isAABBToSphereCollision(
 }
 
 
-bool isAABBToLineCollision(
+bool isAABBToSegmentCollision(
 	const AABB& aabb,
 	const Segment& segment) {
 	float tMin = 0.0f;
@@ -145,7 +145,7 @@ bool isAABBToLineCollision(
 		tMin = max(tMin, tyMin);
 		tMax = min(tMax, tyMax);
 	}
-	
+
 	if (segment.diff.z == 0.0f) {
 		if (segment.origin.z < aabb.min.z || segment.origin.z > aabb.max.z) {
 			return false;
@@ -164,7 +164,62 @@ bool isAABBToLineCollision(
 		return true;
 	}
 
-return false;
+	return false;
+}
+
+
+bool isAABBToLineCollision(
+	const AABB& aabb,
+	const Line& line) {
+	float tMin = 0.0f;
+	float tMax = 1.0f;
+	// 1. 各軸の壁（スラブ）に到達する時間を計算
+	if (line.diff.x == 0.0f) {
+		if (line.origin.x < aabb.min.x || line.origin.x > aabb.max.x) {
+			return false;  // AABBの範囲外なら衝突しない
+		}
+	}
+	else {
+		float txMin = (aabb.min.x - line.origin.x) / line.diff.x;
+		float txMax = (aabb.max.x - line.origin.x) / line.diff.x;
+		if (txMin > txMax) { std::swap(txMin, txMax); }
+		tMin = max(tMin, txMin);
+		tMax = min(tMax, txMax);
+	}
+
+	if (line.diff.y == 0.0f) {
+		if (line.origin.y < aabb.min.y || line.origin.y > aabb.max.y) {
+			return false;
+		}
+	}
+	else {
+
+		float tyMin = (aabb.min.y - line.origin.y) / line.diff.y;
+		float tyMax = (aabb.max.y - line.origin.y) / line.diff.y;
+		if (tyMin > tyMax) { std::swap(tyMin, tyMax); }
+		tMin = max(tMin, tyMin);
+		tMax = min(tMax, tyMax);
+	}
+
+	if (line.diff.z == 0.0f) {
+		if (line.origin.z < aabb.min.z || line.origin.z > aabb.max.z) {
+			return false;
+		}
+	}
+	else {
+		float tzMin = (aabb.min.z - line.origin.z) / line.diff.z;
+		float tzMax = (aabb.max.z - line.origin.z) / line.diff.z;
+
+		if (tzMin > tzMax) { std::swap(tzMin, tzMax); }
+		tMin = max(tMin, tzMin);
+		tMax = min(tMax, tzMax);
+	}
+
+	if (tMin <= tMax) {
+		return true;
+	}
+
+	return false;
 }
 
 
@@ -175,10 +230,10 @@ bool isOBBToSphereCollision(
 
 	Matrix4x4 obbWorldMatrix;
 
-	obbWorldMatrix.m[0][0]= obb.orientations[0].x;
-	obbWorldMatrix.m[0][1]= obb.orientations[0].y;
-	obbWorldMatrix.m[0][2]= obb.orientations[0].z;
-	obbWorldMatrix.m[0][3]= 0.0f;
+	obbWorldMatrix.m[0][0] = obb.orientations[0].x;
+	obbWorldMatrix.m[0][1] = obb.orientations[0].y;
+	obbWorldMatrix.m[0][2] = obb.orientations[0].z;
+	obbWorldMatrix.m[0][3] = 0.0f;
 
 
 	obbWorldMatrix.m[1][0] = obb.orientations[1].x;
@@ -202,9 +257,9 @@ bool isOBBToSphereCollision(
 	Vector3 centerInOBBLocalSpace = Transform(sphere.center, Inverse(obbWorldMatrix));
 
 	Vector3 closestPoint = {
-		std::clamp(centerInOBBLocalSpace.x,-obb.size.x/2.0f,obb.size.x/2.0f),
-		std::clamp(centerInOBBLocalSpace.y,-obb.size.y/2.0f,obb.size.y/2.0f),
-		std::clamp(centerInOBBLocalSpace.z,-obb.size.z/2.0f,obb.size.z/2.0f),
+		std::clamp(centerInOBBLocalSpace.x,-obb.size.x / 2.0f,obb.size.x / 2.0f),
+		std::clamp(centerInOBBLocalSpace.y,-obb.size.y / 2.0f,obb.size.y / 2.0f),
+		std::clamp(centerInOBBLocalSpace.z,-obb.size.z / 2.0f,obb.size.z / 2.0f),
 	};
 	float distance = Length(SubtractVector3(centerInOBBLocalSpace, closestPoint));
 	if (distance <= sphere.radius) {
@@ -213,3 +268,47 @@ bool isOBBToSphereCollision(
 	return false;
 
 }
+
+bool isOBBToSegmentCollsion(const OBB& obb, const Segment& segment)
+{
+	Matrix4x4 obbWorldMatrix;
+
+	obbWorldMatrix.m[0][0] = obb.orientations[0].x;
+	obbWorldMatrix.m[0][1] = obb.orientations[0].y;
+	obbWorldMatrix.m[0][2] = obb.orientations[0].z;
+	obbWorldMatrix.m[0][3] = 0.0f;
+
+
+	obbWorldMatrix.m[1][0] = obb.orientations[1].x;
+	obbWorldMatrix.m[1][1] = obb.orientations[1].y;
+	obbWorldMatrix.m[1][2] = obb.orientations[1].z;
+	obbWorldMatrix.m[1][3] = 0.0f;
+
+	// ※ Z軸の向き
+	obbWorldMatrix.m[2][0] = obb.orientations[2].x;
+	obbWorldMatrix.m[2][1] = obb.orientations[2].y;
+	obbWorldMatrix.m[2][2] = obb.orientations[2].z;
+	obbWorldMatrix.m[2][3] = 0.0f;
+
+	// 3. 移動成分（中心座標）をハメ込む！
+	obbWorldMatrix.m[3][0] = obb.center.x;
+	obbWorldMatrix.m[3][1] = obb.center.y;
+	obbWorldMatrix.m[3][2] = obb.center.z;
+	obbWorldMatrix.m[3][3] = 1.0f; // ここは決まり文句の 1.0
+
+	// 4. あとはこの行列の Inverse（逆行列）を使えば、100%正確なローカル空間へ！
+	Vector3 localOrigin = Transform(segment.origin, Inverse(obbWorldMatrix));
+	Vector3 localEnd = Transform(AddVector3(segment.origin, segment.diff), Inverse(obbWorldMatrix));
+
+	AABB localAABB{
+		{-obb.size.x / 2.0f, -obb.size.y / 2.0f, -obb.size.z / 2.0f},
+		{+obb.size.x / 2.0f, +obb.size.y / 2.0f, +obb.size.z / 2.0f}
+	};
+
+	Line localLine;
+	localLine.origin = localOrigin;
+	localLine.diff = SubtractVector3(localEnd, localOrigin);;
+	return isAABBToLineCollision(localAABB, localLine);
+}
+
+

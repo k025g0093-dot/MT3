@@ -1,7 +1,7 @@
 ﻿#include <Novice.h>
 #include "Vector.h"
 #include <cstdint>
-#include<cmath>
+#include <cmath>
 #include "Grid.h"
 #include "Sphere.h"
 #include "Segment.h"
@@ -9,16 +9,15 @@
 #include "DarwBox.h"
 #include "OBB.h"
 #ifdef _DEBUG
-#include<imgui.h>
+#include <imgui.h>
 #endif
 #include "Collision.h"
 
 const char kWindowTitle[] = "LE2B_29_ヤマトユウヤ_タイトル";
-
 static const int kRowHeight = 20;
 static const int kColumnWidth = 60;
-void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix, const char* label) {
 
+void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix, const char* label) {
 	for (int row = 0; row < 4; ++row) {
 		for (int column = 0; column < 4; ++column) {
 			Novice::ScreenPrintf(
@@ -39,10 +38,8 @@ void vectorScreenPrintf(int x, int y, Vector3 vector, const char* label) {
 
 Vector3 rotate{};
 Vector3 translate{};
-
 Vector3 cameraTranslate{ 0.0f,1.9f,-6.49f };
 Vector3 cameraRotate{ 0.26f,0.0f,0.0f };
-
 float kWindowWidth = 1280.0f;
 float kWindowHeight = 720.0f;
 
@@ -58,9 +55,10 @@ OBB obb{
 	{1.0f,1.0f,1.0f}
 };
 
-Sphere sphere{
-	{1.0f, 0.0f, 0.0f}, // 中心座標 (X: 1.0, Y: 0.0, Z: 0.0)
-	0.5f                // 半径 (Radius: 0.5)
+// 💡 スフィアから「線分」の初期データに戻す
+Segment segment{
+	{-0.7f,0.3f,0.0f},
+	{2.0f,-0.5f,0.0f}
 };
 
 // Windowsアプリでのエントリーポイント(main関数)
@@ -119,14 +117,13 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		obb.orientations[2].y = obbRotateMatrix.m[2][1];
 		obb.orientations[2].z = obbRotateMatrix.m[2][2];
 
-
-		if (isOBBToSphereCollision(obb, sphere)) {
+		// 💡 OBBと線分の当たり判定関数を呼び出すように変更
+		if (isOBBToSegmentCollsion(obb, segment)) {
 			isClro = true;
 		}
 		else {
 			isClro = false;
 		}
-
 
 #ifdef _DEBUG
 		ImGui::Begin("Window");
@@ -140,16 +137,16 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		// --- OBB の操作 ---
 		if (ImGui::CollapsingHeader("OBB")) {
 			ImGui::DragFloat3("OBB Center", &obb.center.x, 0.01f);
-			ImGui::DragFloat3("OBB Rotate", &obbRotate.x, 0.01f); // 【ここを変更！】
+			ImGui::DragFloat3("OBB Rotate", &obbRotate.x, 0.01f);
 			ImGui::DragFloat3("OBB Size", &obb.size.x, 0.01f);
 		}
 
-		// --- Sphere の操作 ---
-		if (ImGui::CollapsingHeader("Sphere")) {
-			ImGui::DragFloat3("Sphere Center", &sphere.center.x, 0.01f);
-			ImGui::DragFloat3("Sphere Radius", &sphere.radius, 0.01f, 0.01f, 10.0f);
+		// --- Segment の操作 ---
+		// 💡 ImGuiの表示を線分用に変更（始点と差分ベクトルを動かせるように）
+		if (ImGui::CollapsingHeader("Segment")) {
+			ImGui::DragFloat3("Segment Origin", &segment.origin.x, 0.01f);
+			ImGui::DragFloat3("Segment Diff", &segment.diff.x, 0.01f);
 		}
-
 
 		ImGui::End();
 #endif // _DEBUG
@@ -157,15 +154,15 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		///
 		/// ↑更新処理ここまで
 		///
+
+		// 💡 描画関数をスフィアから「線分」に変更
 		DrawOBB(obb, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
-		DrawSphere(sphere, wordViewProjectionMatrix, viewportMatrix, WHITE);
+		DrawSegment(segment, wordViewProjectionMatrix, viewportMatrix, WHITE);
 		DrawGrid(wordViewProjectionMatrix, viewportMatrix);
 
 		///
 		/// ↓描画処理ここから
 		///
-
-
 
 		///----------------
 		/// ↑描画処理ここまで
@@ -176,7 +173,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 		// ESCキーが押されたらループを抜ける
 		if (preKeys[DIK_ESCAPE] == 0 && keys[DIK_ESCAPE] != 0) {
-
 			break;
 		}
 	}
