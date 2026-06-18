@@ -31,3 +31,4 @@ bool isOBBToSphereCollision(const OBB& obb, const Sphere& sphere);
 bool isOBBToSegmentCollsion(const OBB& obb, const Segment& segment);
 //bool isOBBToRayCollision(const OBB&obb,const Ray&ray)
 bool isOBBToLineCollision(const OBB& obb, const Line& line);
+bool isOBBToOBBCollision(const OBB& obb1, const OBB& obb2);

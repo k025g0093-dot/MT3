@@ -43,22 +43,28 @@ Vector3 cameraRotate{ 0.26f,0.0f,0.0f };
 float kWindowWidth = 1280.0f;
 float kWindowHeight = 720.0f;
 
-// 既存のobbの宣言の近くに、OBB専用の回転変数を追加
-Vector3 obbRotate{ 0.0f, 0.0f, 0.0f };
-OBB obb{
-	{0.0f,0.0f,0.0f},
+// --- 💡 OBB 1 のデータ ---
+Vector3 obbRotate1{ 0.0f, 0.0f, 0.0f };
+OBB obb1{
+	{0.0f, 0.0f, 0.0f},
 	{
-		{1.0f,0.0f,0.0f},
-		{0.0f,1.0f,0.0f},
-		{0.0f,0.0f,1.0f}
+		{1.0f, 0.0f, 0.0f},
+		{0.0f, 1.0f, 0.0f},
+		{0.0f, 0.0f, 1.0f}
 	},
-	{1.0f,1.0f,1.0f}
+	{0.83f, 0.26f, 0.24f}
 };
 
-// 💡 スフィアから「線分」の初期データに戻す
-Segment segment{
-	{-0.7f,0.3f,0.0f},
-	{2.0f,-0.5f,0.0f}
+// --- 💡 OBB 2 のデータ（新規追加） ---
+Vector3 obbRotate2{ -0.05f, -2.49f, 0.15f };
+OBB obb2{
+	{0.9f, 0.66f, 0.78f},
+	{
+		{1.0f, 0.0f, 0.0f},
+		{0.0f, 1.0f, 0.0f},
+		{0.0f, 0.0f, 1.0f}
+	},
+	{0.5f, 0.37f, 0.5f}
 };
 
 // Windowsアプリでのエントリーポイント(main関数)
@@ -102,23 +108,20 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(
 			0.0f, 0.0f, kWindowWidth, kWindowHeight, 0.0f, 1.0f);
 
+		// 💡 OBB 1 の回転行列の計算と orientations への反映
+		Matrix4x4 obbRotateMatrix1 = Multiply(MakeRotateXMatrix(obbRotate1.x), Multiply(MakeRotateYMatrix(obbRotate1.y), MakeRotateZMatrix(obbRotate1.z)));
+		obb1.orientations[0] = { obbRotateMatrix1.m[0][0], obbRotateMatrix1.m[0][1], obbRotateMatrix1.m[0][2] };
+		obb1.orientations[1] = { obbRotateMatrix1.m[1][0], obbRotateMatrix1.m[1][1], obbRotateMatrix1.m[1][2] };
+		obb1.orientations[2] = { obbRotateMatrix1.m[2][0], obbRotateMatrix1.m[2][1], obbRotateMatrix1.m[2][2] };
 
-		Matrix4x4 obbRotateMatrix = Multiply(MakeRotateXMatrix(obbRotate.x), Multiply(MakeRotateYMatrix(obbRotate.y), MakeRotateZMatrix(obbRotate.z)));
+		// 💡 OBB 2 の回転行列の計算と orientations への反映
+		Matrix4x4 obbRotateMatrix2 = Multiply(MakeRotateXMatrix(obbRotate2.x), Multiply(MakeRotateYMatrix(obbRotate2.y), MakeRotateZMatrix(obbRotate2.z)));
+		obb2.orientations[0] = { obbRotateMatrix2.m[0][0], obbRotateMatrix2.m[0][1], obbRotateMatrix2.m[0][2] };
+		obb2.orientations[1] = { obbRotateMatrix2.m[1][0], obbRotateMatrix2.m[1][1], obbRotateMatrix2.m[1][2] };
+		obb2.orientations[2] = { obbRotateMatrix2.m[2][0], obbRotateMatrix2.m[2][1], obbRotateMatrix2.m[2][2] };
 
-		obb.orientations[0].x = obbRotateMatrix.m[0][0];
-		obb.orientations[0].y = obbRotateMatrix.m[0][1];
-		obb.orientations[0].z = obbRotateMatrix.m[0][2];
-
-		obb.orientations[1].x = obbRotateMatrix.m[1][0];
-		obb.orientations[1].y = obbRotateMatrix.m[1][1];
-		obb.orientations[1].z = obbRotateMatrix.m[1][2];
-
-		obb.orientations[2].x = obbRotateMatrix.m[2][0];
-		obb.orientations[2].y = obbRotateMatrix.m[2][1];
-		obb.orientations[2].z = obbRotateMatrix.m[2][2];
-
-		// 💡 OBBと線分の当たり判定関数を呼び出すように変更
-		if (isOBBToSegmentCollsion(obb, segment)) {
+		// 💡 OBB vs OBB の当たり判定関数を呼び出す（Collision.hに作成する想定）
+		if (isOBBToOBBCollision(obb1, obb2)) {
 			isClro = true;
 		}
 		else {
@@ -134,18 +137,18 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
 		}
 
-		// --- OBB の操作 ---
-		if (ImGui::CollapsingHeader("OBB")) {
-			ImGui::DragFloat3("OBB Center", &obb.center.x, 0.01f);
-			ImGui::DragFloat3("OBB Rotate", &obbRotate.x, 0.01f);
-			ImGui::DragFloat3("OBB Size", &obb.size.x, 0.01f);
+		// --- 💡 OBB 1 の操作 ---
+		if (ImGui::CollapsingHeader("OBB 1")) {
+			ImGui::DragFloat3("OBB1 Center", &obb1.center.x, 0.01f);
+			ImGui::DragFloat3("OBB1 Rotate", &obbRotate1.x, 0.01f);
+			ImGui::DragFloat3("OBB1 Size", &obb1.size.x, 0.01f);
 		}
 
-		// --- Segment の操作 ---
-		// 💡 ImGuiの表示を線分用に変更（始点と差分ベクトルを動かせるように）
-		if (ImGui::CollapsingHeader("Segment")) {
-			ImGui::DragFloat3("Segment Origin", &segment.origin.x, 0.01f);
-			ImGui::DragFloat3("Segment Diff", &segment.diff.x, 0.01f);
+		// --- 💡 OBB 2 の操作（新規追加） ---
+		if (ImGui::CollapsingHeader("OBB 2")) {
+			ImGui::DragFloat3("OBB2 Center", &obb2.center.x, 0.01f);
+			ImGui::DragFloat3("OBB2 Rotate", &obbRotate2.x, 0.01f);
+			ImGui::DragFloat3("OBB2 Size", &obb2.size.x, 0.01f);
 		}
 
 		ImGui::End();
@@ -155,9 +158,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		/// ↑更新処理ここまで
 		///
 
-		// 💡 描画関数をスフィアから「線分」に変更
-		DrawOBB(obb, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
-		DrawSegment(segment, wordViewProjectionMatrix, viewportMatrix, WHITE);
+		// 💡 描画関数を両方とも OBB に変更（当たったら両方、または片方を赤くする）
+		DrawOBB(obb1, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
+		DrawOBB(obb2, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
 		DrawGrid(wordViewProjectionMatrix, viewportMatrix);
 
 		///
