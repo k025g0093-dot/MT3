@@ -8,10 +8,12 @@
 #include "Triangle.h"
 #include "DarwBox.h"
 #include "OBB.h"
+#include "Lerp.h"
 #ifdef _DEBUG
 #include <imgui.h>
 #endif
 #include "Collision.h"
+#include <algorithm> // std::max, std::min 用
 
 const char kWindowTitle[] = "LE2B_29_ヤマトユウヤ_タイトル";
 static const int kRowHeight = 20;
@@ -43,29 +45,12 @@ Vector3 cameraRotate{ 0.26f,0.0f,0.0f };
 float kWindowWidth = 1280.0f;
 float kWindowHeight = 720.0f;
 
-// --- 💡 OBB 1 のデータ ---
-Vector3 obbRotate1{ 0.0f, 0.0f, 0.0f };
-OBB obb1{
-	{0.0f, 0.0f, 0.0f},
-	{
-		{1.0f, 0.0f, 0.0f},
-		{0.0f, 1.0f, 0.0f},
-		{0.0f, 0.0f, 1.0f}
-	},
-	{0.83f, 0.26f, 0.24f}
-};
+// --- 💡 2次ベジェ曲線用の制御点 ---
+Vector3 p0{ -1.0f, 0.0f, 0.0f };
+Vector3 p1{ 0.0f, 2.0f, 0.0f };
+Vector3 p2{ 1.0f, 0.0f, 0.0f };
 
-// --- 💡 OBB 2 のデータ（新規追加） ---
-Vector3 obbRotate2{ -0.05f, -2.49f, 0.15f };
-OBB obb2{
-	{0.9f, 0.66f, 0.78f},
-	{
-		{1.0f, 0.0f, 0.0f},
-		{0.0f, 1.0f, 0.0f},
-		{0.0f, 0.0f, 1.0f}
-	},
-	{0.5f, 0.37f, 0.5f}
-};
+
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
@@ -76,8 +61,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
-
-	bool isClro = false;
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -108,26 +91,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(
 			0.0f, 0.0f, kWindowWidth, kWindowHeight, 0.0f, 1.0f);
 
-		// 💡 OBB 1 の回転行列の計算と orientations への反映
-		Matrix4x4 obbRotateMatrix1 = Multiply(MakeRotateXMatrix(obbRotate1.x), Multiply(MakeRotateYMatrix(obbRotate1.y), MakeRotateZMatrix(obbRotate1.z)));
-		obb1.orientations[0] = { obbRotateMatrix1.m[0][0], obbRotateMatrix1.m[0][1], obbRotateMatrix1.m[0][2] };
-		obb1.orientations[1] = { obbRotateMatrix1.m[1][0], obbRotateMatrix1.m[1][1], obbRotateMatrix1.m[1][2] };
-		obb1.orientations[2] = { obbRotateMatrix1.m[2][0], obbRotateMatrix1.m[2][1], obbRotateMatrix1.m[2][2] };
-
-		// 💡 OBB 2 の回転行列の計算と orientations への反映
-		Matrix4x4 obbRotateMatrix2 = Multiply(MakeRotateXMatrix(obbRotate2.x), Multiply(MakeRotateYMatrix(obbRotate2.y), MakeRotateZMatrix(obbRotate2.z)));
-		obb2.orientations[0] = { obbRotateMatrix2.m[0][0], obbRotateMatrix2.m[0][1], obbRotateMatrix2.m[0][2] };
-		obb2.orientations[1] = { obbRotateMatrix2.m[1][0], obbRotateMatrix2.m[1][1], obbRotateMatrix2.m[1][2] };
-		obb2.orientations[2] = { obbRotateMatrix2.m[2][0], obbRotateMatrix2.m[2][1], obbRotateMatrix2.m[2][2] };
-
-		// 💡 OBB vs OBB の当たり判定関数を呼び出す（Collision.hに作成する想定）
-		if (isOBBToOBBCollision(obb1, obb2)) {
-			isClro = true;
-		}
-		else {
-			isClro = false;
-		}
-
+		// 💡 各制御点の位置に配置するスフィアデータを作成（半径 0.05f）
+		Sphere sphereP0{ p0, 0.05f };
+		Sphere sphereP1{ p1, 0.05f };
+		Sphere sphereP2{ p2, 0.05f };
 
 #ifdef _DEBUG
 		ImGui::Begin("Window");
@@ -138,18 +105,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
 		}
 
-		// --- 💡 OBB 1 の操作 ---
-		if (ImGui::CollapsingHeader("OBB 1")) {
-			ImGui::DragFloat3("OBB1 Center", &obb1.center.x, 0.01f);
-			ImGui::DragFloat3("OBB1 Rotate", &obbRotate1.x, 0.01f);
-			ImGui::DragFloat3("OBB1 Size", &obb1.size.x, 0.01f);
-		}
-
-		// --- 💡 OBB 2 の操作（新規追加） ---
-		if (ImGui::CollapsingHeader("OBB 2")) {
-			ImGui::DragFloat3("OBB2 Center", &obb2.center.x, 0.01f);
-			ImGui::DragFloat3("OBB2 Rotate", &obbRotate2.x, 0.01f);
-			ImGui::DragFloat3("OBB2 Size", &obb2.size.x, 0.01f);
+		// --- ベジェ曲線 制御点の操作 ---
+		if (ImGui::CollapsingHeader("Bezier Control Points")) {
+			ImGui::DragFloat3("P0 (Start)", &p0.x, 0.01f);
+			ImGui::DragFloat3("P1 (Control)", &p1.x, 0.01f);
+			ImGui::DragFloat3("P2 (End)", &p2.x, 0.01f);
 		}
 
 		ImGui::End();
@@ -159,10 +119,21 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		/// ↑更新処理ここまで
 		///
 
-		// 💡 描画関数を両方とも OBB に変更（当たったら両方、または片方を赤くする）
-		DrawOBB(obb1, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
-		DrawOBB(obb2, wordViewProjectionMatrix, viewportMatrix, isClro ? RED : WHITE);
+		// 💡 ベジェ曲線のラインを描画
+		DrawBezier(p0, p1, p2, wordViewProjectionMatrix, viewportMatrix, WHITE);
+
+		// 💡 3つの制御点をスフィアとして描画（見やすいように赤系にしています）
+		DrawSphere(sphereP0, wordViewProjectionMatrix, viewportMatrix, RED);
+		DrawSphere(sphereP1, wordViewProjectionMatrix, viewportMatrix, RED);
+		DrawSphere(sphereP2, wordViewProjectionMatrix, viewportMatrix, RED);
+
 		DrawGrid(wordViewProjectionMatrix, viewportMatrix);
+
+		// 制御点同士を結ぶガイド線
+		Segment side1{ p0, SubtractVector3(p1, p0) };
+		Segment side2{ p1, SubtractVector3(p2, p1) };
+		DrawSegment(side1, wordViewProjectionMatrix, viewportMatrix, 0x550000FF);
+		DrawSegment(side2, wordViewProjectionMatrix, viewportMatrix, 0x550000FF);
 
 		///
 		/// ↓描画処理ここから
