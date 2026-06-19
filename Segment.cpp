@@ -29,6 +29,10 @@ Vector3 ClosestPoint(const Vector3& point, const Segment& segment)
 	return result;
 }
 
+
+
+
+
 void DrawSegment(const Segment& segment, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color)
 {
 	Vector3 start = Transform(Transform(segment.origin, viewProjectionMatrix), viewportMatrix);
