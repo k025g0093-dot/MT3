@@ -45,10 +45,22 @@ Vector3 cameraRotate{ 0.26f,0.0f,0.0f };
 float kWindowWidth = 1280.0f;
 float kWindowHeight = 720.0f;
 
-// --- 💡 2次ベジェ曲線用の制御点 ---
-Vector3 p0{ -1.0f, 0.0f, 0.0f };
-Vector3 p1{ 0.0f, 2.0f, 0.0f };
-Vector3 p2{ 1.0f, 0.0f, 0.0f };
+// --- 💡 肩・肘・手の位置 ---
+Vector3 transuLate[3]={
+	{ 0.2f, 1.0f, 0.0f },
+	{ 0.4f, 0.0f, 0.0f },
+	{ 0.3f, 0.0f, 0.0f }
+};
+Vector3 rotates[3]={ 
+	{ 0.0f, 0.0f, -6.8f },
+	{ 0.0f, 0.0f, -1.4f },
+	{ 0.0f, 0.0f, 0.0f }
+};
+Vector3 scales[3]={ 
+	{ 1.0f, 1.0f, 1.0f },
+	{ 1.0f, 1.0f, 1.0f },
+	{ 1.0f, 1.0f, 1.0f }
+};
 
 
 
@@ -91,13 +103,28 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(
 			0.0f, 0.0f, kWindowWidth, kWindowHeight, 0.0f, 1.0f);
 
-		// 💡 各制御点の位置に配置するスフィアデータを作成（半径 0.05f）
-		Sphere sphereP0{ p0, 0.05f };
-		Sphere sphereP1{ p1, 0.05f };
-		Sphere sphereP2{ p2, 0.05f };
+		Matrix4x4 shoulderWorldMatrix = MakeAffineMatrix(
+			scales[0], rotates[0], transuLate[0]);
+
+		Matrix4x4 elbowWorldMatrix = Multiply(
+			MakeAffineMatrix(scales[1], rotates[1], transuLate[1]),
+			shoulderWorldMatrix);
+
+		Matrix4x4 handWorldMatrix = Multiply(
+			MakeAffineMatrix(scales[2], rotates[2], transuLate[2]),
+			elbowWorldMatrix);
+
+		Vector3 shoulderPos{ shoulderWorldMatrix.m[3][0], shoulderWorldMatrix.m[3][1], shoulderWorldMatrix.m[3][2] };
+		Vector3 elbowPos{ elbowWorldMatrix.m[3][0], elbowWorldMatrix.m[3][1], elbowWorldMatrix.m[3][2] };
+		Vector3 handPos{ handWorldMatrix.m[3][0], handWorldMatrix.m[3][1], handWorldMatrix.m[3][2] };
+
+		// 💡 肩・肘・手のスフィアを作成
+		Sphere sphereShoulder{ shoulderPos, 0.1f };
+		Sphere sphereElbow{ elbowPos, 0.08f };
+		Sphere sphereHand{ handPos, 0.06f };
 
 #ifdef _DEBUG
-		ImGui::Begin("Window");
+		ImGui::Begin("Arm Hierarchy");
 
 		// --- カメラの操作 ---
 		if (ImGui::CollapsingHeader("Camera")) {
@@ -105,11 +132,16 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
 		}
 
-		// --- ベジェ曲線 制御点の操作 ---
-		if (ImGui::CollapsingHeader("Bezier Control Points")) {
-			ImGui::DragFloat3("P0 (Start)", &p0.x, 0.01f);
-			ImGui::DragFloat3("P1 (Control)", &p1.x, 0.01f);
-			ImGui::DragFloat3("P2 (End)", &p2.x, 0.01f);
+		if (ImGui::CollapsingHeader("Arm Joints")) {
+			const char* jointNames[] = { "Shoulder", "Elbow", "Hand" };
+			for (int i = 0; i < 3; ++i) {
+				char label[64];
+				snprintf(label, sizeof(label), "%s Translate", jointNames[i]);
+				ImGui::DragFloat3(label, &transuLate[i].x, 0.01f);
+
+				snprintf(label, sizeof(label), "%s Rotate", jointNames[i]);
+				ImGui::DragFloat3(label, &rotates[i].x, 0.01f);
+			}
 		}
 
 		ImGui::End();
@@ -119,21 +151,17 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		/// ↑更新処理ここまで
 		///
 
-		// 💡 ベジェ曲線のラインを描画
-		DrawBezier(p0, p1, p2, wordViewProjectionMatrix, viewportMatrix, WHITE);
-
-		// 💡 3つの制御点をスフィアとして描画（見やすいように赤系にしています）
-		DrawSphere(sphereP0, wordViewProjectionMatrix, viewportMatrix, RED);
-		DrawSphere(sphereP1, wordViewProjectionMatrix, viewportMatrix, RED);
-		DrawSphere(sphereP2, wordViewProjectionMatrix, viewportMatrix, RED);
+		DrawSphere(sphereShoulder, wordViewProjectionMatrix, viewportMatrix, RED);
+		DrawSphere(sphereElbow, wordViewProjectionMatrix, viewportMatrix, GREEN);
+		DrawSphere(sphereHand, wordViewProjectionMatrix, viewportMatrix, 0x0000FFff);
 
 		DrawGrid(wordViewProjectionMatrix, viewportMatrix);
 
-		// 制御点同士を結ぶガイド線
-		Segment side1{ p0, SubtractVector3(p1, p0) };
-		Segment side2{ p1, SubtractVector3(p2, p1) };
-		DrawSegment(side1, wordViewProjectionMatrix, viewportMatrix, 0x550000FF);
-		DrawSegment(side2, wordViewProjectionMatrix, viewportMatrix, 0x550000FF);
+		// 💡 肩から肘、肘から手へ繋ぐラインを描画
+		Segment shoulderToElbow{ shoulderPos, SubtractVector3(elbowPos, shoulderPos) };
+		Segment elbowToHand{ elbowPos, SubtractVector3(handPos, elbowPos) };
+		DrawSegment(shoulderToElbow, wordViewProjectionMatrix, viewportMatrix, WHITE);
+		DrawSegment(elbowToHand, wordViewProjectionMatrix, viewportMatrix, WHITE);
 
 		///
 		/// ↓描画処理ここから
