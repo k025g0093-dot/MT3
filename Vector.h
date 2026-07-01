@@ -43,3 +43,13 @@ float Length(const Vector3& v1);
 Vector3 MultiplyVector3(const float v1,const Vector3&v2);
 Vector3 MultiplyVector3ToVector3(const Vector3& v1, const Vector3& v2);
 Vector3 Normalize(Vector3 normal);
+
+inline Vector3 operator+(const Vector3& v1, const Vector3& v2){return AddVector3(v1, v2); }
+inline Vector3 operator-(const Vector3& v1, const Vector3& v2){return SubtractVector3(v1, v2); }
+inline Vector3 operator*(const float s, const Vector3& v){return MultiplyVector3(s, v); }
+inline Vector3 operator*(const Vector3& v, const float s){return MultiplyVector3(s, v); }
+inline Vector3 operator/(const Vector3& v, const float s) { return MultiplyVector3(1.0f / s, v); }
+
+inline Matrix4x4 operator+(const Matrix4x4& m1, const Matrix4x4& m2) { return Add(m1, m2); }
+inline Matrix4x4 operator-(const Matrix4x4& m1, const Matrix4x4& m2) { return Subtract(m1, m2); }
+inline Matrix4x4 operator*(const Matrix4x4& m1, const Matrix4x4& m2) { return Multiply(m1, m2); }
