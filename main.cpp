@@ -121,7 +121,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		if (length != 0.0f) {
 			Vector3 direction = Normalize(diff);
 			Vector3 restPosition = spring.anchor + direction * spring.naturalLength;
-			Vector3 displacement = length*(ball.position - restPosition);
+			Vector3 displacement = ball.position - restPosition;
 			Vector3 restoringForce = -spring.stiffness * displacement;
 			Vector3 dampingForce = -spring.dampingCoefficient * ball.velocity;
 			Vector3 force = restoringForce + dampingForce;
