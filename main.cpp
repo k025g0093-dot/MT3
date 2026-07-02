@@ -88,7 +88,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	const Vector3 kBallInitialPosition = { -1.2f, 0.0f, 0.0f }; // リセット用に初期位置を保持
 
-	float deltaTime = 1.0f/60.0f; // 60FPSを想定したデルタタイム
+	float deltaTime = 1.0f / 60.0f; // 60FPSを想定したデルタタイム
 	bool isSimulating = false;
 
 	// ウィンドウの×ボタンが押されるまでループ
@@ -115,26 +115,28 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(
 			0.0f, 0.0f, kWindowWidth, kWindowHeight, 0.0f, 1.0f);
 
-
 		Vector3 diff = ball.position - spring.anchor;
 		float length = Length(diff);
-		if (length != 0.0f) {
-			Vector3 direction = Normalize(diff);
-			Vector3 restPosition = spring.anchor + direction * spring.naturalLength;
-			Vector3 displacement = ball.position - restPosition;
-			Vector3 restoringForce = -spring.stiffness * displacement;
-			Vector3 dampingForce = -spring.dampingCoefficient * ball.velocity;
-			Vector3 force = restoringForce + dampingForce;
-			ball.acceleration = force / ball.mass;
+
+		if (isSimulating) {
+			if (length != 0.0f) {
+				Vector3 direction = Normalize(diff);
+				Vector3 restPosition = spring.anchor + direction * spring.naturalLength;
+				Vector3 displacement = ball.position - restPosition;
+				Vector3 restoringForce = -spring.stiffness * displacement;
+				Vector3 dampingForce = -spring.dampingCoefficient * ball.velocity;
+				Vector3 force = restoringForce + dampingForce;
+				ball.acceleration = force / ball.mass;
+			}
+
+			ball.velocity.x += ball.acceleration.x * deltaTime;
+			ball.velocity.y += ball.acceleration.y * deltaTime;
+			ball.velocity.z += ball.acceleration.z * deltaTime;
+
+			ball.position.x += ball.velocity.x * deltaTime;
+			ball.position.y += ball.velocity.y * deltaTime;
+			ball.position.z += ball.velocity.z * deltaTime;
 		}
-
-		ball.velocity.x += ball.acceleration.x * deltaTime;
-		ball.velocity.y += ball.acceleration.y * deltaTime;
-		ball.velocity.z += ball.acceleration.z * deltaTime;
-
-		ball.position.x += ball.velocity.x * deltaTime;
-		ball.position.y += ball.velocity.y * deltaTime;
-		ball.position.z += ball.velocity.z * deltaTime;
 
 #ifdef _DEBUG
 		ImGui::Begin("Window");
