@@ -45,12 +45,13 @@ Vector3 cameraRotate{ 0.26f,0.0f,0.0f };
 float kWindowWidth = 1280.0f;
 float kWindowHeight = 720.0f;
 
-struct center 
+struct Pendulum
 {
-	Vector3 pos;//円運動の初期位置
-	float radius;//円運動をする際の大まかな半径
-
-
+	Vector3 anchor;
+	float length;
+	float angle;
+	float angularVelocity;
+	float angularAcceleration;
 };
 
 struct Ball
@@ -82,14 +83,15 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	ball.radius = 0.08f;
 	ball.color = BLUE;
 
-	center c={};
-	c.pos = { 0,0,0 };
-	c.radius = 0.8f;
+	Pendulum pendulum = {};
+	pendulum.anchor = { 0.0f,1.0f,0.0f };
+	pendulum.length = 0.8f;
+	pendulum.angle = 0.7f;
+	pendulum.angularVelocity = 0.0f;
+	pendulum.angularAcceleration = 0.0f;
 
 
 
-	float angularVelocity = 3.14f;
-	float angle = 0.0f;
 
 	const Vector3 kBallInitialPosition = { -1.2f, 0.0f, 0.0f }; // リセット用に初期位置を保持
 
@@ -123,11 +125,15 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 
 		if (isStart) {
-		
-			angle += angularVelocity * deltaTime;
-			ball.position.x = c.pos.x+std::cos(angle)*c.radius;
-			ball.position.y = c.pos.y+std::sin(angle)*c.radius;
-			ball.position.z= c.pos.z;
+
+			pendulum.angularAcceleration =
+				-(9.8f / pendulum.length) * std::sin(pendulum.angle);
+			pendulum.angularVelocity += pendulum.angularAcceleration * deltaTime;
+			pendulum.angle += pendulum.angularVelocity * deltaTime;
+
+			ball.position.x = pendulum.anchor.x + std::sin(pendulum.angle) * pendulum.length;
+			ball.position.y = pendulum.anchor.y - std::cos(pendulum.angle) * pendulum.length;
+			ball.position.z = pendulum.anchor.z;
 
 		}
 
@@ -136,13 +142,14 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
 		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
 		if (ImGui::Button("Start Spring")) {
-			angle = 0.0f;
-			ball.position.x = c.pos.x + std::cos(angle) * c.radius;
-			ball.position.y = c.pos.y + std::sin(angle) * c.radius;
-			ball.position.z = c.pos.z;
+			ball.position.x = pendulum.anchor.x + std::sin(pendulum.angle) * pendulum.length;
+			ball.position.y = pendulum.anchor.y - std::cos(pendulum.angle) * pendulum.length;
+			ball.position.z = pendulum.anchor.z;
+
 			ball.velocity = { 0.0f, 0.0f, 0.0f };
 			ball.acceleration = { 0.0f, 0.0f, 0.0f };
 			isStart = true;
+
 		}
 		ImGui::End();
 #endif // _DEBUG
@@ -152,6 +159,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		///
 
 		DrawGrid(wordViewProjectionMatrix, viewportMatrix);
+
+		Segment pendulumSegment{ pendulum.anchor, ball.position - pendulum.anchor };
+		DrawSegment(pendulumSegment, wordViewProjectionMatrix, viewportMatrix, 0x000000ff);
+
 
 		// ボールをスフィアとして描画
 		Sphere ballSphere{ ball.position, ball.radius };
