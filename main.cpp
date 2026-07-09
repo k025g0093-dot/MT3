@@ -89,7 +89,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	const Vector3 kBallInitialPosition = { -1.2f, 0.0f, 0.0f }; // リセット用に初期位置を保持
 
 	float deltaTime = 1.0f / 60.0f; // 60FPSを想定したデルタタイム
-	bool isSimulating = false;
+	bool isStart = false;
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -118,7 +118,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		Vector3 diff = ball.position - spring.anchor;
 		float length = Length(diff);
 
-		if (isSimulating) {
+		if (isStart) {
 			if (length != 0.0f) {
 				Vector3 direction = Normalize(diff);
 				Vector3 restPosition = spring.anchor + direction * spring.naturalLength;
@@ -146,7 +146,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			ball.position = kBallInitialPosition;
 			ball.velocity = { 0.0f, 0.0f, 0.0f };
 			ball.acceleration = { 0.0f, 0.0f, 0.0f };
-			isSimulating = true;
+			isStart = true;
 		}
 		ImGui::End();
 #endif // _DEBUG
