@@ -45,11 +45,12 @@ Vector3 cameraRotate{ 0.26f,0.0f,0.0f };
 float kWindowWidth = 1280.0f;
 float kWindowHeight = 720.0f;
 
-struct Spring {
-	Vector3 anchor;
-	float naturalLength;
-	float stiffness;
-	float dampingCoefficient;
+struct center 
+{
+	Vector3 pos;//円運動の初期位置
+	float radius;//円運動をする際の大まかな半径
+
+
 };
 
 struct Ball
@@ -73,18 +74,22 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
 
-	Spring spring = {};
-	spring.anchor = { 0.0f, 0.0f, 0.0f };
-	spring.naturalLength = 1.0f;
-	spring.stiffness = 100.0f;
-	spring.dampingCoefficient = 2.0f;
 
 
 	Ball ball = {};
-	ball.position = { -1.2f, 0.0f, 0.0f };
+	ball.position = { 0.0f, 0.0f, 0.0f };
 	ball.mass = 2.0f;
-	ball.radius = 0.05f;
+	ball.radius = 0.08f;
 	ball.color = BLUE;
+
+	center c={};
+	c.pos = { 0,0,0 };
+	c.radius = 0.8f;
+
+
+
+	float angularVelocity = 3.14f;
+	float angle = 0.0f;
 
 	const Vector3 kBallInitialPosition = { -1.2f, 0.0f, 0.0f }; // リセット用に初期位置を保持
 
@@ -115,27 +120,15 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(
 			0.0f, 0.0f, kWindowWidth, kWindowHeight, 0.0f, 1.0f);
 
-		Vector3 diff = ball.position - spring.anchor;
-		float length = Length(diff);
+
 
 		if (isStart) {
-			if (length != 0.0f) {
-				Vector3 direction = Normalize(diff);
-				Vector3 restPosition = spring.anchor + direction * spring.naturalLength;
-				Vector3 displacement = ball.position - restPosition;
-				Vector3 restoringForce = -spring.stiffness * displacement;
-				Vector3 dampingForce = -spring.dampingCoefficient * ball.velocity;
-				Vector3 force = restoringForce + dampingForce;
-				ball.acceleration = force / ball.mass;
-			}
+		
+			angle += angularVelocity * deltaTime;
+			ball.position.x = c.pos.x+std::cos(angle)*c.radius;
+			ball.position.y = c.pos.y+std::sin(angle)*c.radius;
+			ball.position.z= c.pos.z;
 
-			ball.velocity.x += ball.acceleration.x * deltaTime;
-			ball.velocity.y += ball.acceleration.y * deltaTime;
-			ball.velocity.z += ball.acceleration.z * deltaTime;
-
-			ball.position.x += ball.velocity.x * deltaTime;
-			ball.position.y += ball.velocity.y * deltaTime;
-			ball.position.z += ball.velocity.z * deltaTime;
 		}
 
 #ifdef _DEBUG
@@ -143,7 +136,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
 		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
 		if (ImGui::Button("Start Spring")) {
-			ball.position = kBallInitialPosition;
+			angle = 0.0f;
+			ball.position.x = c.pos.x + std::cos(angle) * c.radius;
+			ball.position.y = c.pos.y + std::sin(angle) * c.radius;
+			ball.position.z = c.pos.z;
 			ball.velocity = { 0.0f, 0.0f, 0.0f };
 			ball.acceleration = { 0.0f, 0.0f, 0.0f };
 			isStart = true;
@@ -156,10 +152,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		///
 
 		DrawGrid(wordViewProjectionMatrix, viewportMatrix);
-
-		// ばね本体(アンカー→ボール)を線で描画
-		Segment springSegment{ spring.anchor, ball.position - spring.anchor };
-		DrawSegment(springSegment, wordViewProjectionMatrix, viewportMatrix, 0x000000ff);
 
 		// ボールをスフィアとして描画
 		Sphere ballSphere{ ball.position, ball.radius };
