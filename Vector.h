@@ -44,6 +44,8 @@ Vector3 MultiplyVector3(const float v1,const Vector3&v2);
 Vector3 MultiplyVector3ToVector3(const Vector3& v1, const Vector3& v2);
 Vector3 Normalize(Vector3 normal);
 
+Vector3 Reflect(const Vector3& input, const Vector3& normal);
+
 inline Vector3 operator+(const Vector3& v1, const Vector3& v2){return AddVector3(v1, v2); }
 inline Vector3 operator-(const Vector3& v1, const Vector3& v2){return SubtractVector3(v1, v2); }
 inline Vector3 operator*(const float s, const Vector3& v){return MultiplyVector3(s, v); }

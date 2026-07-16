@@ -540,3 +540,12 @@ Vector3 MultiplyVector3ToVector3(const Vector3& v1, const Vector3& v2) {
 	result.z = v1.z * v2.z;
 	return result;
 }
+
+Vector3 Reflect(const Vector3& input, const Vector3& normal) {
+	Vector3 result{};
+	float dot = Dot(input, normal);
+	result.x = input.x - 2 * dot * normal.x;
+	result.y = input.y - 2 * dot * normal.y;
+	result.z = input.z - 2 * dot * normal.z;
+	return result;
+}

@@ -143,5 +143,6 @@
     <ClInclude Include="DarwBox.h" />
     <ClInclude Include="OBB.h" />
     <ClInclude Include="Lerp.h" />
+    <ClInclude Include="Capsule.h" />
   </ItemGroup>
 </Project>

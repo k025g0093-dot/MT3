@@ -377,3 +377,20 @@ bool isOBBToOBBCollision(const OBB& obb1, const OBB& obb2) {
 
 	return true;
 }
+
+bool IsCollisionPlaneCapsule(const Plane& plane, const Capsule& capsule) {
+    Vector3 start = capsule.segment.origin;
+    Vector3 end = capsule.segment.origin + capsule.segment.diff;
+
+    float distStart = Dot(plane.normal, start) - plane.distance;
+    float distEnd = Dot(plane.normal, end) - plane.distance;
+
+    // 符号が違う → 軸が平面を貫通している
+    if (distStart * distEnd < 0.0f) {
+        return true;
+    }
+
+    // 同じ側にいる場合、近い方の距離がradius以下なら接触
+    float closestDist = min(std::fabs(distStart), std::fabs(distEnd));
+    return closestDist <= capsule.radius;
+}
