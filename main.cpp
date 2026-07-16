@@ -45,13 +45,10 @@ Vector3 cameraRotate{ 0.26f,0.0f,0.0f };
 float kWindowWidth = 1280.0f;
 float kWindowHeight = 720.0f;
 
-struct ConicalPendulum
+struct GroundPlane
 {
-	Vector3 anchor;
-	float length;
-	float halfApexAngle;
-	float angle;
-	float angularVelocity;
+	Vector3 normal;
+	float distnce;
 };
 
 struct Ball
@@ -64,6 +61,12 @@ struct Ball
 	unsigned int color;
 };
 
+struct CapsuleToBall
+{
+
+	Segment segment;
+	float radius;
+};
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
@@ -78,25 +81,22 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 
 	Ball ball = {};
-	ball.position = { 0.0f, 0.0f, 0.0f };
+	ball.position = { 0.8f, 1.2f, 0.3f };
+	ball.acceleration = { 0.0f,-9.8f,0.0f };
 	ball.mass = 2.0f;
-	ball.radius = 0.08f;
-	ball.color = BLUE;
+	ball.radius = 0.05f;
+	ball.color = WHITE;
 
-	ConicalPendulum conicalPendulum = {};
-	conicalPendulum.anchor = { 0.0f,1.0f,0.0f };
-	conicalPendulum.length = 0.8f;
-	conicalPendulum.halfApexAngle = 0.7f;
-	conicalPendulum.angle = 0.0f;
-	conicalPendulum.angularVelocity = 0.0f;
+	GroundPlane groundPlane = {};
+	groundPlane.normal = Normalize({ -0.2f,0.9f,-0.3f });
+	groundPlane.distnce = 0.0f;
 
-
-
+	float e = 0.5f;
+	Vector3 prevPosition = ball.position;
 
 	const Vector3 kBallInitialPosition = { -1.2f, 0.0f, 0.0f }; // リセット用に初期位置を保持
 
 	float deltaTime = 1.0f / 60.0f; // 60FPSを想定したデルタタイム
-	bool isStart = false;
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -124,38 +124,34 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 
 
-		if (isStart) {
+		ball.velocity.x += ball.acceleration.x * deltaTime;
+		ball.velocity.y += ball.acceleration.y * deltaTime;
+		ball.velocity.z += ball.acceleration.z * deltaTime;
+		ball.position.x += ball.velocity.x * deltaTime;
+		ball.position.y += ball.velocity.y * deltaTime;
+		ball.position.z += ball.velocity.z * deltaTime;
 
-			conicalPendulum.angularVelocity =
-				std::sqrt(9.8f / (conicalPendulum.length * std::cos(conicalPendulum.halfApexAngle)));
-			conicalPendulum.angle += conicalPendulum.angularVelocity * deltaTime;
+		prevPosition = ball.position;
 
-			float radius = std::sin(conicalPendulum.halfApexAngle) * conicalPendulum.length;
-			float height = std::cos(conicalPendulum.halfApexAngle) * conicalPendulum.length;
+		CapsuleToBall movementCapsule{
+			Segment{ prevPosition, ball.position - prevPosition },
+			ball.radius
+		};
 
+		if (IsCollisionPlaneCapsule(
+			Plane{ groundPlane.normal, groundPlane.distnce },
+			Capsule{ movementCapsule.segment,movementCapsule.radius }
+		)) {
 
-			ball.position.x = conicalPendulum.anchor.x + std::cos(conicalPendulum.angle) * radius;
-			ball.position.y = conicalPendulum.anchor.y - height;
-			ball.position.z = conicalPendulum.anchor.z + std::sin(conicalPendulum.angle) * radius;
-
-		}
-
-#ifdef _DEBUG
-		ImGui::Begin("Window");
-		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
-		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
-		if (ImGui::Button("Start")) {
-			ball.position.x = conicalPendulum.anchor.x + std::sin(conicalPendulum.angle) * conicalPendulum.length;
-			ball.position.y = conicalPendulum.anchor.y - std::cos(conicalPendulum.angle) * conicalPendulum.length;
-			ball.position.z = conicalPendulum.anchor.z;
-
-			ball.velocity = { 0.0f, 0.0f, 0.0f };
-			ball.acceleration = { 0.0f, 0.0f, 0.0f };
-			isStart = true;
+			Vector3 reflected = Reflect(ball.velocity, groundPlane.normal);
+			Vector3 projectToNormal = Project(reflected, groundPlane.normal);
+			Vector3 movingDirection = reflected - projectToNormal;
+			ball.velocity = projectToNormal * e + movingDirection;
 
 		}
-		ImGui::End();
-#endif // _DEBUG
+
+
+
 
 		///
 		/// ↑更新処理ここまで
@@ -163,8 +159,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 		DrawGrid(wordViewProjectionMatrix, viewportMatrix);
 
-		Segment pendulumSegment{ conicalPendulum.anchor, ball.position - conicalPendulum.anchor };
-		DrawSegment(pendulumSegment, wordViewProjectionMatrix, viewportMatrix, 0x000000ff);
+		DrawPlane(Plane{ groundPlane.normal, groundPlane.distnce }, wordViewProjectionMatrix, viewportMatrix, WHITE);
 
 
 		// ボールをスフィアとして描画
