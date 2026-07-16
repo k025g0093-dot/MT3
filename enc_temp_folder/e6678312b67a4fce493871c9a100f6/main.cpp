@@ -144,7 +144,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		ImGui::Begin("Window");
 		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
 		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
-		if (ImGui::Button("Start")) {
+		if (ImGui::Button("Start Spring")) {
 			ball.position.x = conicalPendulum.anchor.x + std::sin(conicalPendulum.angle) * conicalPendulum.length;
 			ball.position.y = conicalPendulum.anchor.y - std::cos(conicalPendulum.angle) * conicalPendulum.length;
 			ball.position.z = conicalPendulum.anchor.z;
